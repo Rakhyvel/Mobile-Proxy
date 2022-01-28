@@ -4,6 +4,17 @@
 
 #define CLIENT
 
+/* 
+ * Awaits a connection, reads in packet including header and payload, prints out payload
+ */
+void server() {
+
+}
+
+/*
+ * Takes in an input stream, reads each character and adds it to a buffer, then
+ * sends the size and buffer to a server connection
+ */
 void client(FILE* in) {
     unsigned int buffer_size = 255; // size of the allocated mem for buffer
     unsigned int buffer_pos = 0; // cursor into buffer
@@ -41,5 +52,6 @@ int main(int argc, char** argv) {
     client(stdin);
 #else
     printf("I am a server\n");
+    server();
 #endif
 }
