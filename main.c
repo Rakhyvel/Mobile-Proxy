@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <sys/socket.h>
-
-#define CLIENT
+#include <sys/socket.h>
 
 /* 
  * Awaits a connection, reads in packet including header and payload, prints out payload
@@ -54,4 +52,5 @@ int main(int argc, char** argv) {
     printf("I am a server\n");
     server();
 #endif
+    return 0;
 }
