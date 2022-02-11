@@ -39,17 +39,21 @@ static void send_data(int sock, char* data, int num_bytes) {
  * sends the size and buffer to a server connection
  */
 void client(FILE* in, char* ipText, char* portText) {
-    char buffer[1024];
     int c; // Char retrieved from input stream, will be EOF at end of file
     unsigned int buffer_pos = 0; // cursor into buffer
+    int net_buffer_pos; // big endian version of buffer_pos
+    char buffer[1024]; // character buffer to store input
+    struct sockaddr_in serverAddr; // address to connect to
+    int sock; // socket to send to
+
     // Pop character from input stream until EOF
     for (;(c = fgetc(in)) != EOF && c != '\n' && buffer_pos < 1024; buffer_pos++) {
         buffer[buffer_pos] = c;
     }
-    int net_buffer_pos = htonl(buffer_pos);
+    net_buffer_pos = htonl(buffer_pos);
 
     // Create socket 'sock'
-    int sock = socket(PF_INET, SOCK_STREAM, 0);
+    sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
         // err
         perror("client failed creating socket");
@@ -57,11 +61,9 @@ void client(FILE* in, char* ipText, char* portText) {
     }
 
     // Connect socket
-    struct sockaddr_in serverAddr;
     inet_pton(AF_INET, ipText, &(serverAddr.sin_addr));
     serverAddr.sin_port = atoi(portText);
-    int connectErr = connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-    if(connectErr) {
+    if(connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
         perror("client failed connecting socket");
         exit(1);
     }
