@@ -4,6 +4,7 @@
 #include <winsock.h>
 #else
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <sys/types.h>
 #endif
 
