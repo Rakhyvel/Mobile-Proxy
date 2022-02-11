@@ -16,6 +16,10 @@ void server() {
 
 }
 
+/*
+ * Takes in a socket, some data, and the length of the data and ensures that
+ * the entire chunk of data is transfered
+ */
 static void send_data(int sock, char* data, int num_bytes) {
     int bytes_sent;
     do {
@@ -35,13 +39,6 @@ static void send_data(int sock, char* data, int num_bytes) {
  * sends the size and buffer to a server connection
  */
 void client(FILE* in, char* ipText, char* portText) {
-    struct sockaddr_in serverAddr;
-    // Create server address
-    {
-        inet_pton(AF_INET, ipText, &(serverAddr.sin_addr));
-        serverAddr.sin_port = atoi(portText);
-    }
-
     char buffer[1024];
     int c; // Char retrieved from input stream, will be EOF at end of file
     unsigned int buffer_pos = 0; // cursor into buffer
@@ -52,23 +49,24 @@ void client(FILE* in, char* ipText, char* portText) {
     int net_buffer_pos = htonl(buffer_pos);
 
     // Create socket 'sock'
-    int sock; 
-    {
-        sock = socket(PF_INET, SOCK_STREAM, 0);
-        if (sock == -1) {
-            // err
-            perror("client failed creating socket");
-            exit(1);
-        }
-        // inet_ntoi
-        int connectErr = connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-        if(connectErr) {
-            perror("client failed connecting socket");
-            exit(1);
-        }
+    int sock = socket(PF_INET, SOCK_STREAM, 0);
+    if (sock == -1) {
+        // err
+        perror("client failed creating socket");
+        exit(1);
     }
 
-    // Send size
+    // Connect socket
+    struct sockaddr_in serverAddr;
+    inet_pton(AF_INET, ipText, &(serverAddr.sin_addr));
+    serverAddr.sin_port = atoi(portText);
+    int connectErr = connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+    if(connectErr) {
+        perror("client failed connecting socket");
+        exit(1);
+    }
+
+    // Send size and data
     send_data(sock, (char*)&net_buffer_pos, sizeof(net_buffer_pos));
     send_data(sock, buffer, buffer_pos);
 }
