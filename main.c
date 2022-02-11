@@ -71,8 +71,6 @@ void client(FILE* in, char* ipText, char* portText) {
     // Send size
     send_data(sock, (char*)&net_buffer_pos, sizeof(net_buffer_pos));
     send_data(sock, buffer, buffer_pos);
-
-    free(buffer);
 }
 
 int main(int argc, char** argv) {
