@@ -11,6 +11,19 @@
 #include <unistd.h>
 #include <string.h>
 
+static void recv_data(int sock, char* data, int num_bytes) {
+    int bytes_sent;
+    do {
+        bytes_sent = recv(sock, data, num_bytes, 0);
+        if (bytes_sent == -1) {
+            perror("client failed sending data");
+            exit(1);
+        } else {
+            data += bytes_sent;
+            num_bytes -= bytes_sent;
+        }
+    } while(num_bytes > 0);
+}
 /*
 *Creats and returns socket
 */
@@ -32,7 +45,7 @@ void server(int port) {
    // exit(1);
    // unsigned int buffer_size = 1024;
    // unsigned int buff_pos = 0;
-    char buff[1028];
+    char buff[1024];
     int acc,b,l,sock;
     //socket in for inet only
     struct sockaddr_in serverAddr, clientAddr;
@@ -85,10 +98,11 @@ void server(int port) {
        // }
        // printf("recv two\n");
         int sizeBuff;
-
-        recv(acc,&sizeBuff,sizeof(sizeBuff),0);
-
-        while((len = recv(acc,buff,sizeof(buff),0))){//read in from client
+        recv_data(sock,&sizeBuff,4);
+        recv_data(sock,&buff,sizeBuff);
+        //recv(acc,&sizeBuff,sizeof(sizeBuff),0);
+        
+        //while((len = recv(acc,buff,sizeof(buff),0))){//read in from client
             //ntohs()
            // printf("loop ran\n");
            // printf("starting buff:%c\n",buff[0]);
@@ -137,21 +151,6 @@ static void send_data(int sock, char* data, int num_bytes) {
         }
     } while(num_bytes > 0);
 }
-
-static void recv_data(int sock, char* data, int num_bytes) {
-    int bytes_sent;
-    do {
-        bytes_sent = recv(sock, data, num_bytes, 0);
-        if (bytes_sent == -1) {
-            perror("client failed sending data");
-            exit(1);
-        } else {
-            data += bytes_sent;
-            num_bytes -= bytes_sent;
-        }
-    } while(num_bytes > 0);
-}
-
 /*
  * Takes in an input stream, reads each character and adds it to a buffer, then
  * sends the size and buffer to a server connection
@@ -180,7 +179,7 @@ void client(FILE* in, char* ipText, char* portText) {
 
     // Connect socket
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = atoi(portText);
+    serverAddr.sin_port = htons(atoi(portText));
     inet_pton(AF_INET, ipText, &serverAddr.sin_addr);
     if(connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
         perror("client failed connecting socket");
