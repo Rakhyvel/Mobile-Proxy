@@ -10,13 +10,18 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #endif
 static void recv_data(int sock, char* data, int num_bytes) {
     int bytes_sent;
     do {
         bytes_sent = recv(sock, data, num_bytes, 0);
+         if(bytes_sent > 0){
+         printf("%d\n",num_bytes);
+         }
         if (bytes_sent == -1) {
-            perror("client failed sending data");
+            perror("client failed recv data:");
+            printf("%d",errno);
             exit(1);
         } else {
             data += bytes_sent;
@@ -46,7 +51,7 @@ void server(int port) {
     struct sockaddr_in serverAddr, clientAddr;
 
     sock = socket(PF_INET, SOCK_STREAM, 0);
-
+    printf("building sock\n");
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
     serverAddr.sin_port = htons(port);// added local to hold spot 
@@ -54,11 +59,13 @@ void server(int port) {
       fprintf(stderr,"Unable t create socket");
       exit(1);
     }
+    printf("binding\n");
     b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(b < 0){
 	fprintf(stderr,"Unable to Bind");
         exit(1);
     }
+    printf("listing\n");
     l = listen(sock,5);// pending connections on socket
     if(l < 0){
         fprintf(stderr,"Unable to Listen");
@@ -67,16 +74,20 @@ void server(int port) {
      //accept the conection
     socklen_t client_len;
     client_len  = sizeof(clientAddr);
+    printf("acc\n");
     acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
     if(acc < 0){
        fprintf(stderr,"Unable to accept connection");
        exit(1);
      }
-        
+     printf("recv data\n");
      int sizeBuff;
-     recv_data(sock,(char*)&sizeBuff,4);
-     recv_data(sock,buff,sizeBuff);
+     recv_data(acc,(char*)&sizeBuff,4);
+     printf("secound recv\n");
+     sizeBuff = ntohl(sizeBuff);
+     recv_data(acc,buff,sizeBuff);
      printf("%d",sizeBuff);
+     printf("end recv\n");
      int i;        
      for(i = 0; i < sizeBuff; i++){
           printf("%c",buff[i]);
