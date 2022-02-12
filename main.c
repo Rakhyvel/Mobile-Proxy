@@ -3,6 +3,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
 /*
 *Creats and returns socket
 */
@@ -20,7 +22,7 @@ int build_socket(){
  * Awaits a connection, reads in packet including header and payload, prints out payload
  */
 void server(int port) {
-    printf("%d", port);
+   // printf("%d", port);
    // exit(1);
    // unsigned int buffer_size = 1024;
    // unsigned int buff_pos = 0;
@@ -40,48 +42,67 @@ void server(int port) {
       fprintf(stderr,"Unable t create socket");
       exit(1);
     }
-    printf("building sock\n");
+   // printf("building sock\n");
     //still need to fill out serverAddr
-    printf("binding\n");
+   // printf("binding\n");
     b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     printf("%d", b);
     if(b < 0){
 	fprintf(stderr,"Unable to Bind");
         exit(1);
     }
-    printf("listening\n");
+   // printf("listening\n");
     l = listen(sock,5);// pending connections on socket
     if(l < 0){
         fprintf(stderr,"Unable to Listen");
         exit(1);
     }
-    printf("reading data");
-    while(1){//read infintly
+   // printf("reading data\n");
+   // while(1){//read infintly
         //accept the conection
-        socklen_t client_len;
-        client_len  = sizeof(clientAddr);
-        printf("accepting ");
-        acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
-        if(acc < 0){
-           fprintf(stderr,"Unable to accept connection");
-           exit(1);
-        }
-        int len; //, size;
+    socklen_t client_len;
+    client_len  = sizeof(clientAddr);
+   // printf("accepting\n ");
+    acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
+    if(acc < 0){
+       fprintf(stderr,"Unable to accept connection");
+       exit(1);
+     }
+     int len; //, size;
        // int sumBit = 0;
         
 	//iwhile(sumBit < 4){
-        //    len = recv(acc,buff,sizeof(buff), 0);
+       // printf("recv one\n");
+       // while((len = recv(acc,buff,sizeof(buff), 0))){
+       //     printf("%s",buff);
         //    sumBit = len + sumBit;
        // }
+       // printf("recv two\n");
         while((len = recv(acc,buff,sizeof(buff),0))){//read in from client
-            //ntohs() 
-            printf("rev -> %d\n",len);
-            printf("%s\n",buff);
-       }
+            //ntohs()
+           // printf("loop ran\n");
+           // printf("starting buff:%c\n",buff[0]);
+            char sizeBuff[4];
+            int k;
+            for(k = 0; k < 4; k++){
+                sizeBuff[k] = buff[k];
+            } 
+           // char sizeBuff[4] = ((buff[0])) + ((buff[1])) + ((buff[2])) + ((buff[3]));
+            int size = atoi(sizeBuff);
+            printf("%d\n",size);
+	    char message[1024];
+            int i;
+            for(i = 0; i < size; i++){
+                message[i] = buff[i+4];
+               // printf("%c",buff[i]);
+                message[i+1] = '\0';
+            }
+            printf("%s\n",message);
+         }
+   close(sock);
+   // }
 
-    }
-
-   free(buff);
+  // free(buff);
 
 }
 
