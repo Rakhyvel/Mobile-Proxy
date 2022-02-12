@@ -12,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #endif
+
 static void recv_data(int sock, char* data, int num_bytes) {
     int bytes_sent;
     do {
@@ -29,6 +30,7 @@ static void recv_data(int sock, char* data, int num_bytes) {
         }
     } while(num_bytes > 0);
 }
+
 /*
 *Creats and returns socket
 */
