@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+
 /*
 *Creats and returns socket
 */
@@ -26,7 +27,7 @@ void server(int port) {
    // exit(1);
    // unsigned int buffer_size = 1024;
    // unsigned int buff_pos = 0;
-    char buff[1024];
+    char buff[1028];
     int acc,b,l,sock;
     //socket in for inet only
     struct sockaddr_in serverAddr, clientAddr;
@@ -35,7 +36,7 @@ void server(int port) {
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
-    serverAddr.sin_port = htons(6202);// added local to hold spot 
+    serverAddr.sin_port = htons(port);// added local to hold spot 
     //sock = build_socket();
     //sock = socket(PF_INET, SOCK_STREAM, 0);
     if(sock < 0){
@@ -46,7 +47,7 @@ void server(int port) {
     //still need to fill out serverAddr
    // printf("binding\n");
     b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
-    printf("%d", b);
+   // printf("%d", b);
     if(b < 0){
 	fprintf(stderr,"Unable to Bind");
         exit(1);
@@ -78,20 +79,28 @@ void server(int port) {
         //    sumBit = len + sumBit;
        // }
        // printf("recv two\n");
+        int sizeBuff;
+
+        recv(acc,&sizeBuff,sizeof(sizeBuff),0);
+
         while((len = recv(acc,buff,sizeof(buff),0))){//read in from client
             //ntohs()
            // printf("loop ran\n");
            // printf("starting buff:%c\n",buff[0]);
-            char sizeBuff[4];
+            // read header
+            // int sizeBuff;
             int k;
             for(k = 0; k < 4; k++){
                 sizeBuff[k] = buff[k];
             } 
            // char sizeBuff[4] = ((buff[0])) + ((buff[1])) + ((buff[2])) + ((buff[3]));
-            int size = atoi(sizeBuff);
+            //number to read into the buffer
+            int size;
+            size = ntohl(sizeBuff);
             printf("%d\n",size);
 	    char message[1024];
             int i;
+            //read from buffer and print message
             for(i = 0; i < size; i++){
                 message[i] = buff[i+4];
                // printf("%c",buff[i]);
@@ -146,7 +155,7 @@ int main(int argc, char* argv[]) {
     printf("I am a client\n");
     client(stdin);
 #else
-    printf("I am a server\n");
+  //  printf("I am a server\n");
     if(argc == 2){
        server(atoi(argv[1]));
     }else{
