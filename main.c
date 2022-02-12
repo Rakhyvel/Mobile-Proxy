@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
-
+#endif
 static void recv_data(int sock, char* data, int num_bytes) {
     int bytes_sent;
     do {
@@ -74,14 +74,14 @@ void server(int port) {
      }
         
      int sizeBuff;
-     recv_data(sock,&sizeBuff,4);
-     recv_data(sock,&buff,sizeBuff);
+     recv_data(sock,(char*)&sizeBuff,4);
+     recv_data(sock,buff,sizeBuff);
      printf("%d",sizeBuff);
-        
+     int i;        
      for(i = 0; i < sizeBuff; i++){
           printf("%c",buff[i]);
      }
-   }
+   
  close(sock);
 }
 
