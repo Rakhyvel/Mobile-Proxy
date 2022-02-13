@@ -36,6 +36,20 @@ static void send_data(int sock, char* data, int num_bytes) {
     } while(num_bytes > 0);
 }
 
+static void recv_data(int sock, char* data, int num_bytes) {
+    int bytes_sent;
+    do {
+        bytes_sent = recv(sock, data, num_bytes, 0);
+        if (bytes_sent == -1) {
+            perror("client failed sending data");
+            exit(1);
+        } else {
+            data += bytes_sent;
+            num_bytes -= bytes_sent;
+        }
+    } while(num_bytes > 0);
+}
+
 /*
  * Takes in an input stream, reads each character and adds it to a buffer, then
  * sends the size and buffer to a server connection
