@@ -77,7 +77,7 @@ void server(int port) {
         
      int sizeBuff;
      recv_data(sock,(char*)&sizeBuff,4);
-     recv_data(sock,buff,sizeBuff);
+     recv_data(sock,buff,ntohl(sizeBuff));
      printf("%d",sizeBuff);
      int i;        
      for(i = 0; i < sizeBuff; i++){
