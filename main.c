@@ -107,11 +107,15 @@ void server(int port) {
     bool terminated = false;
     // receive message length and data until connection is terminated
     while(!terminated) {
-        terminated = recv_data(sock, (char*)&sizeBuff, sizeof(int));
-        terminated = recv_data(sock, buff, ntohl(sizeBuff));
+        terminated = recv_data(acc, (char*)&sizeBuff, sizeof(int));
+        sizeBuff = ntohl(sizeBuff);
         if(!terminated) {
             printf("%d\n", sizeBuff);
-            for(int i = 0; i < sizeBuff; i++) {
+        }
+        terminated = recv_data(acc, buff, sizeBuff);
+        if(!terminated) {
+            int i;
+            for(i = 0; i < sizeBuff; i++) {
                 printf("%c", buff[i]);
             }
             printf("\n");
