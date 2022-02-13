@@ -3,8 +3,9 @@
 #ifdef _WIN64
 #include <winsock.h>
 #else
-#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #endif
 
@@ -25,6 +26,20 @@ static void send_data(int sock, char* data, int num_bytes) {
     int bytes_sent;
     do {
         bytes_sent = send(sock, data, num_bytes, 0);
+        if (bytes_sent == -1) {
+            perror("client failed sending data");
+            exit(1);
+        } else {
+            data += bytes_sent;
+            num_bytes -= bytes_sent;
+        }
+    } while(num_bytes > 0);
+}
+
+static void recv_data(int sock, char* data, int num_bytes) {
+    int bytes_sent;
+    do {
+        bytes_sent = recv(sock, data, num_bytes, 0);
         if (bytes_sent == -1) {
             perror("client failed sending data");
             exit(1);
@@ -62,8 +77,9 @@ void client(FILE* in, char* ipText, char* portText) {
     }
 
     // Connect socket
-    inet_pton(AF_INET, ipText, &(serverAddr.sin_addr));
+    serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = atoi(portText);
+    inet_pton(AF_INET, ipText, &serverAddr.sin_addr);
     if(connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
         perror("client failed connecting socket");
         exit(1);
