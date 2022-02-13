@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #endif
 
 /*
@@ -42,7 +43,7 @@ static void send_data(int sock, char* data, int num_bytes) {
     do {
         bytes_sent = send(sock, data, num_bytes, 0);
         if (bytes_sent == -1) {
-            perror("client failed sending data");
+            perror("client failed recv data:");
             exit(1);
         } else {
             data += bytes_sent;
@@ -73,12 +74,11 @@ void server(int port) {
     struct sockaddr_in serverAddr, clientAddr;
 
     sock = socket(PF_INET, SOCK_STREAM, 0);
-
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
     serverAddr.sin_port = htons(port);// added local to hold spot 
     if(sock < 0){
-      fprintf(stderr,"Unable t create socket");
+      fprintf(stderr,"Unable to create socket");
       exit(1);
     }
 
@@ -136,15 +136,10 @@ void client(FILE* in, char* ipText, char* portText) {
     char buffer[1024]; // character buffer to store input
     struct sockaddr_in serverAddr; // address to connect to
     int sock; // socket to send to
-
-    // Pop character from input stream until EOF
-    for (; (c = fgetc(in)) != EOF && c != '\n' && buffer_pos < 1024; buffer_pos++) {
-        buffer[buffer_pos] = c;
-    }
-    net_buffer_pos = htonl(buffer_pos);
-
+    int end = 1;
     // Create socket 'sock'
     sock = socket(PF_INET, SOCK_STREAM, 0);
+
     if (sock == -1) {
         // err
         perror("client failed creating socket");
@@ -159,15 +154,27 @@ void client(FILE* in, char* ipText, char* portText) {
         perror("client failed connecting socket");
         exit(1);
     }
-
+    while(end){ 
+     // Pop character from input stream until EOF 
+    for (;(c = fgetc(in)) != EOF && c != '\n' && buffer_pos < 1024; buffer_pos++) {
+        buffer[buffer_pos] = c;
+    }
+    
+    if(c == EOF){
+      break;
+    }
+    net_buffer_pos = htonl(buffer_pos);
     // Send size and data
     send_data(sock, (char*)&net_buffer_pos, sizeof(net_buffer_pos));
     send_data(sock, buffer, buffer_pos);
+    buffer_pos = 0;
+    }
+    close(sock);
 }
 
 int main(int argc, char* argv[]) {
 #ifdef CLIENT
-    printf("I am a client\n");
+//    printf("I am a client\n");
     if (argc < 3) {
         fprintf(stderr, "Usage: client <ip#> <port#>");
     } else {
