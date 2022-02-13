@@ -12,6 +12,20 @@
 #include <string.h>
 #endif
 
+static void recv_data(int sock, char* data, int num_bytes) {
+    int bytes_sent;
+    do {
+        bytes_sent = recv(sock, data, num_bytes, 0);
+        if (bytes_sent == -1) {
+            perror("client failed sending data");
+            exit(1);
+        } else {
+            data += bytes_sent;
+            num_bytes -= bytes_sent;
+        }
+    } while(num_bytes > 0);
+}
+
 /*
 *Creats and returns socket
 */
@@ -29,13 +43,8 @@ int build_socket(){
  * Awaits a connection, reads in packet including header and payload, prints out payload
  */
 void server(int port) {
-   // printf("%d", port);
-   // exit(1);
-   // unsigned int buffer_size = 1024;
-   // unsigned int buff_pos = 0;
-    char buff[1028];
+    char buff[1024];
     int acc,b,l,sock;
-    //socket in for inet only
     struct sockaddr_in serverAddr, clientAddr;
 
     sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -43,82 +52,39 @@ void server(int port) {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
     serverAddr.sin_port = htons(port);// added local to hold spot 
-    //sock = build_socket();
-    //sock = socket(PF_INET, SOCK_STREAM, 0);
     if(sock < 0){
       fprintf(stderr,"Unable t create socket");
       exit(1);
     }
-   // printf("building sock\n");
-    //still need to fill out serverAddr
-   // printf("binding\n");
     b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
-   // printf("%d", b);
     if(b < 0){
 	fprintf(stderr,"Unable to Bind");
         exit(1);
     }
-   // printf("listening\n");
     l = listen(sock,5);// pending connections on socket
     if(l < 0){
         fprintf(stderr,"Unable to Listen");
         exit(1);
     }
-   // printf("reading data\n");
-   // while(1){//read infintly
-        //accept the conection
+     //accept the conection
     socklen_t client_len;
     client_len  = sizeof(clientAddr);
-   // printf("accepting\n ");
     acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
     if(acc < 0){
        fprintf(stderr,"Unable to accept connection");
        exit(1);
      }
-     int len; //, size;
-       // int sumBit = 0;
         
-	//iwhile(sumBit < 4){
-       // printf("recv one\n");
-       // while((len = recv(acc,buff,sizeof(buff), 0))){
-       //     printf("%s",buff);
-        //    sumBit = len + sumBit;
-       // }
-       // printf("recv two\n");
-        int sizeBuff;
-
-        recv(acc,&sizeBuff,sizeof(sizeBuff),0);
-
-        while((len = recv(acc,buff,sizeof(buff),0))){//read in from client
-            //ntohs()
-           // printf("loop ran\n");
-           // printf("starting buff:%c\n",buff[0]);
-            // read header
-            // int sizeBuff;
-            int k;
-            for(k = 0; k < 4; k++){
-                sizeBuff[k] = buff[k];
-            } 
-           // char sizeBuff[4] = ((buff[0])) + ((buff[1])) + ((buff[2])) + ((buff[3]));
-            //number to read into the buffer
-            int size;
-            size = ntohl(sizeBuff);
-            printf("%d\n",size);
-	    char message[1024];
-            int i;
-            //read from buffer and print message
-            for(i = 0; i < size; i++){
-                message[i] = buff[i+4];
-               // printf("%c",buff[i]);
-                message[i+1] = '\0';
-            }
-            printf("%s\n",message);
-         }
-   close(sock);
-   // }
-
-  // free(buff);
-
+     int sizeBuff;
+     recv_data(sock,(char*)&sizeBuff,4);
+     recv_data(sock,buff,sizeBuff);
+     printf("%d",sizeBuff);
+     int i;        
+     for(i = 0; i < sizeBuff; i++){
+          printf("%c",buff[i]);
+     }
+   
+ close(sock);
 }
 
 /*
@@ -138,21 +104,6 @@ static void send_data(int sock, char* data, int num_bytes) {
         }
     } while(num_bytes > 0);
 }
-
-static void recv_data(int sock, char* data, int num_bytes) {
-    int bytes_sent;
-    do {
-        bytes_sent = recv(sock, data, num_bytes, 0);
-        if (bytes_sent == -1) {
-            perror("client failed sending data");
-            exit(1);
-        } else {
-            data += bytes_sent;
-            num_bytes -= bytes_sent;
-        }
-    } while(num_bytes > 0);
-}
-
 /*
  * Takes in an input stream, reads each character and adds it to a buffer, then
  * sends the size and buffer to a server connection
@@ -181,7 +132,7 @@ void client(FILE* in, char* ipText, char* portText) {
 
     // Connect socket
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = atoi(portText);
+    serverAddr.sin_port = htons(atoi(portText));
     inet_pton(AF_INET, ipText, &serverAddr.sin_addr);
     if(connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
         perror("client failed connecting socket");
