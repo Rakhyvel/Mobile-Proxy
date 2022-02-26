@@ -119,6 +119,7 @@ void sproxy(int port) {
     printf("created telnet socket\n");
     int rest = 1;
     while(rest){
+        printf("loop\n");
         int n , rv;
         struct timeval tv;
         fd_set readfds;
@@ -140,6 +141,7 @@ void sproxy(int port) {
         if(FD_ISSET(sock, &readfds)){
             rev = recv(sock,buff,MAX_LEN,0);
             if(rev < 0){
+                printf("break\n");
                 break;
             }
             send_data(sockDeamon, buff, rev);
@@ -147,6 +149,7 @@ void sproxy(int port) {
         if(FD_ISSET(sockDeamon,&readfds)){
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
             if(rev < 0){
+                printf("break\n");
                 break;
             }
             send_data(sock, buff2, rev2);
