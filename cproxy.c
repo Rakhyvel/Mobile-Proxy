@@ -54,7 +54,6 @@ void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
     char buff2[1024];
     int MAX_LEN = 1024;
-    int acc, b, localSock;
     struct sockaddr_in sproxyAddr; // address to connect to
     struct sockaddr_in cproxyAddr, telnetAddr;
 
@@ -94,20 +93,15 @@ void cproxy(int port, char* ipText , char* portText) {
 
     //accept the conection to telnet
     while(1) {
-        if(acc < 0){
-            fprintf(stderr,"Unable to accept connection");
-            exit(1);
-        }
-/////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon// 
         int rest = 1;
         while(rest){
             int n , rv;
             struct timeval tv;
             fd_set readfds;
 
-            FD_SET(acc, &readfds);
+            FD_SET(telnetSock, &readfds);
             FD_SET(sproxySock, &readfds);
-            if(acc > sproxySock) n = acc + 1;
+            if(telnetCon > sproxySock) n = telnetCon + 1;
             else n = sproxySock +1;
 
             tv.tv_sec = 10;
@@ -119,8 +113,8 @@ void cproxy(int port, char* ipText , char* portText) {
                 exit(1);
             }
             int rev, rev2;
-            if(FD_ISSET(acc, &readfds)){
-                rev = recv(acc, buff, MAX_LEN,0);
+            if(FD_ISSET(telnetSock, &readfds)){
+                rev = recv(telnetCon, buff, MAX_LEN,0);
                 if(rev <= 0){
                     break;
                 }
@@ -131,7 +125,7 @@ void cproxy(int port, char* ipText , char* portText) {
                 if (rev <= 0){
                     break;
                 }
-                send_data(acc, buff2, rev2);
+                send_data(telnetCon, buff2, rev2);
             }
         }
     }
