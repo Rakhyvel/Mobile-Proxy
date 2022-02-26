@@ -135,6 +135,7 @@ void cproxy(int port, char* ipText , char* portText) {
         rv = select(n,&readfds,NULL,NULL,&tv);
         if(rv < 0){
             fprintf(stderr,"Error in select");
+            exit(1);
         }
         int rev, rev2;
         if(FD_ISSET(sock, &readfds)){
