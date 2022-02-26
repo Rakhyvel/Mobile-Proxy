@@ -63,7 +63,7 @@ void cproxy(int port, char ipText , char portText) {
     unsigned int buffer_pos = 0; // cursor into buffer
     int net_buffer_pos; // big endian version of buffer_pos
     char buffer[1024]; // character buffer to store input
-    struct sockaddr_in serverAddr; // address to connect to
+    struct sockaddr_in serverAddr2; // address to connect to
     int sockDeamon; // socket to send to
     int end = 1;
     // Create socket 'sock'
@@ -76,10 +76,10 @@ void cproxy(int port, char ipText , char portText) {
     }
 
     // Connect socket
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(atoi(portText));
-    inet_pton(AF_INET, ipText, &serverAddr.sin_addr);
-    if(connect(sockDeamon, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
+    serverAddr2.sin_family = AF_INET;
+    serverAddr2.sin_port = htons(atoi(portText));
+    inet_pton(AF_INET, ipText, &serverAddr2.sin_addr);
+    if(connect(sockDeamon, (struct sockaddr*)&serverAddr2, sizeof(serverAddr2)) == -1) {
         perror("client failed connecting socket");
         exit(1);
     }
