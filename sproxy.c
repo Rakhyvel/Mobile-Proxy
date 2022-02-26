@@ -103,8 +103,8 @@ void sproxy(int port) {
     }
 
     // Connect socket
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(atoi(portText));
+    serverAddr2.sin_family = AF_INET;
+    serverAddr2.sin_port = htons(atoi(portText));
     inet_pton(AF_INET, ipText, &serverAddr2.sin_addr);
     if(connect(sockDeamon, (struct sockaddr*)&serverAddr2, sizeof(serverAddr2)) == -1) {
         perror("client failed connecting socket");
