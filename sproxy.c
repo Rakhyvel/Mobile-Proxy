@@ -16,19 +16,19 @@
 #endif
 
 
-static bool recv_data(int sock, char* data, int num_bytes) {
-    int bytes_recv;
-    do {
-        bytes_recv = recv(sock, data, num_bytes, 0);
-        if (bytes_recv <= 0) {
-            return true;
-        } else {
-            data += bytes_recv;
-            num_bytes -= bytes_recv;
-        }
-    } while(num_bytes > 0);
-    return false;
-}
+// static bool recv_data(int sock, char* data, int num_bytes) {
+//     int bytes_recv;
+//     do {
+//         bytes_recv = recv(sock, data, num_bytes, 0);
+//         if (bytes_recv <= 0) {
+//             return true;
+//         } else {
+//             data += bytes_recv;
+//             num_bytes -= bytes_recv;
+//         }
+//     } while(num_bytes > 0);
+//     return false;
+// }
 
 /*
  * Takes in a socket, some data, and the length of the data and ensures that
@@ -91,13 +91,13 @@ void sproxy(int port) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon//
     char ipText[] = "127.0.0.1";
     char portText[] = "23";
-    int c; // Char retrieved from input stream, will be EOF at end of file
-    unsigned int buffer_pos = 0; // cursor into buffer
-    int net_buffer_pos; // big endian version of buffer_pos
-    char buffer[1024]; // character buffer to store input
+    //int c; // Char retrieved from input stream, will be EOF at end of file
+    //unsigned int buffer_pos = 0; // cursor into buffer
+    //int net_buffer_pos; // big endian version of buffer_pos
+    //char buffer[1024]; // character buffer to store input
     struct sockaddr_in serverAddr2; // address to connect to
     int sockDeamon; // socket to send to
-    int end = 1;
+    //int end = 1;
     // Create socket 'sock'
     sockDeamon = socket(PF_INET, SOCK_STREAM, 0);
 
