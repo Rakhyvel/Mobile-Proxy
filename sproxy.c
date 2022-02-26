@@ -163,7 +163,7 @@ void sproxy(int port) {
             //int se = send(sock, buff2,rev2, 0);
             
             send_data(acc, buff2, rev2);
-            printf("sent2->%s\n");
+            printf("sent2->\n");
         }
         printf("end loop\n");
       }
