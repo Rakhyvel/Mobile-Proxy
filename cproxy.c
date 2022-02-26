@@ -50,7 +50,7 @@ static void send_data(int sock, char* data, int num_bytes) {
 /* 
  * Awaits a connection from cprocy when connected conncts to telnet deamon
  */
-void cproxy(int port, char ipText , char portText) {
+void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
     char buff2[1024];
     int MAX_LEN = 1024;
@@ -133,6 +133,10 @@ void cproxy(int port, char ipText , char portText) {
         tv.tv_usec = 500000;
         
         rv = select(n,&readfds,NULL,NULL,&tv);
+        if(rv < 0){
+            fprintf(stderr,"Error in select");
+            exit(1);
+        }
         int rev, rev2;
         if(FD_ISSET(sock, &readfds)){
             rev = recv(sock,buff,MAX_LEN,0);

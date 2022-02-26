@@ -89,8 +89,8 @@ void sproxy(int port) {
         exit(1);
     }
 /////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon//
-    char ipText = "127.0.0.1";
-    char portText = "23";
+    char ipText[] = "127.0.0.1";
+    char portText[] = "23";
     int c; // Char retrieved from input stream, will be EOF at end of file
     unsigned int buffer_pos = 0; // cursor into buffer
     int net_buffer_pos; // big endian version of buffer_pos
@@ -130,6 +130,10 @@ void sproxy(int port) {
         tv.tv_usec = 500000;
         
         rv = select(n,&readfds,NULL,NULL,&tv);
+        if(rv < 0){
+            fprintf(stderr,"Error in select");
+            exit(1);
+        }
         int rev, rev2;
         if(FD_ISSET(sock, &readfds)){
             rev = recv(sock,buff,MAX_LEN,0);
