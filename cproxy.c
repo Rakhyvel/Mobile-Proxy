@@ -54,9 +54,7 @@ void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
     char buff2[1024];
     int MAX_LEN = 1024;
-    int acc, b, l, localSock;
-    while(1){
-
+    int acc, b, localSock;
     //char ipText = "127.0.0.1";
     //char portText = "23";
     //int c; // Char retrieved from input stream, will be EOF at end of file
@@ -64,12 +62,12 @@ void cproxy(int port, char* ipText , char* portText) {
     //int net_buffer_pos; // big endian version of buffer_pos
     //char buffer[1024]; // character buffer to store input
     struct sockaddr_in serverAddr2; // address to connect to
-    int sockDeamon; // socket to send to
+    int sock; // socket to send to
     //int end = 1;
     // Create socket 'sock'
-    sockDeamon = socket(PF_INET, SOCK_STREAM, 0);
+    sock = socket(PF_INET, SOCK_STREAM, 0);
 
-    if (sockDeamon == -1) {
+    if (sock == -1) {
         // err
         perror("client failed creating socket");
         exit(1);
@@ -79,7 +77,7 @@ void cproxy(int port, char* ipText , char* portText) {
     serverAddr2.sin_family = AF_INET;
     serverAddr2.sin_port = htons(atoi(portText));
     inet_pton(AF_INET, ipText, &serverAddr2.sin_addr);
-    if(connect(sockDeamon, (struct sockaddr*)&serverAddr2, sizeof(serverAddr2)) == -1) {
+    if(connect(sock, (struct sockaddr*)&serverAddr2, sizeof(serverAddr2)) == -1) {
         perror("client failed connecting socket");
         exit(1);
     }
@@ -92,67 +90,66 @@ void cproxy(int port, char* ipText , char* portText) {
     serverAddr.sin_port = htons(port);// added local to hold spot 
     
     if(localSock < 0){
-      fprintf(stderr,"Unable to create socket");
-      exit(1);
+    fprintf(stderr,"Unable to create socket");
+    exit(1);
     }
 
     b = bind(localSock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(b < 0){
-	fprintf(stderr,"Unable to Bind");
+    fprintf(stderr,"Unable to Bind");
         exit(1);
     }
 
-    l = listen(localSock,5);// pending connections on socket
-    if(l < 0){
+    if(listen(localSock, 5) < 0){
         fprintf(stderr,"Unable to Listen");
         exit(1);
     }
 
-    //accept the conection
+    //accept the conection to telnet
     socklen_t client_len;
     client_len  = sizeof(clientAddr);
-    acc = accept(localSock,(struct sockaddr *)&clientAddr,&client_len);
-    if(acc < 0){
-        fprintf(stderr,"Unable to accept connection");
-        exit(1);
-    }
-/////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon//
-    
-    int rest = 1;
-    while(rest){
-        int n , rv;
-        struct timeval tv;
-        fd_set readfds;
-
-        FD_SET(localSock, &readfds);
-        FD_SET(sockDeamon, &readfds);
-        if(localSock > sockDeamon) n = localSock + 1;
-        else n = sockDeamon +1;
-
-        tv.tv_sec = 10;
-        tv.tv_usec = 500000;
-        
-        rv = select(n,&readfds,NULL,NULL,&tv);
-        if(rv < 0){
-            fprintf(stderr,"Error in select");
+    while(1) {
+        acc = accept(localSock, (struct sockaddr *)&clientAddr,&client_len);
+        if(acc < 0){
+            fprintf(stderr,"Unable to accept connection");
             exit(1);
         }
-        int rev, rev2;
-        if(FD_ISSET(localSock, &readfds)){
-            rev = recv(localSock,buff,MAX_LEN,0);
-            if(rev <= 0){
-                break;
+/////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon// 
+        int rest = 1;
+        while(rest){
+            int n , rv;
+            struct timeval tv;
+            fd_set readfds;
+
+            FD_SET(acc, &readfds);
+            FD_SET(sock, &readfds);
+            if(acc > sock) n = acc + 1;
+            else n = sock +1;
+
+            tv.tv_sec = 10;
+            tv.tv_usec = 500000;
+            
+            rv = select(n,&readfds,NULL,NULL,&tv);
+            if(rv < 0){
+                fprintf(stderr,"Error in select");
+                exit(1);
             }
-            send_data(sockDeamon, buff, rev);
-        }
-        if(FD_ISSET(sockDeamon,&readfds)){
-            rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
-            if(rev <= 0){
-                break;
+            int rev, rev2;
+            if(FD_ISSET(acc, &readfds)){
+                rev = recv(acc, buff, MAX_LEN,0);
+                if(rev <= 0){
+                    break;
+                }
+                send_data(sock, buff, rev);
             }
-            send_data(localSock, buff2, rev2);
+            if(FD_ISSET(sock,&readfds)){
+                rev2 = recv(sock, buff2, MAX_LEN,0);
+                if(rev <= 0){
+                    break;
+                }
+                send_data(acc, buff2, rev2);
+            }
         }
-      }
     }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////  
