@@ -55,7 +55,6 @@ void sproxy(int port) {
     char buff2[1024];
     int MAX_LEN = 1024;
     int acc, b, l, sock;
-    while(1){
     struct sockaddr_in serverAddr, clientAddr;
 
     sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -118,20 +117,22 @@ void sproxy(int port) {
     }
     printf("created telnet socket\n");
     int rest = 1;
+    int n , rv;
+    struct timeval tv;
+    fd_set readfds;
+
+    FD_SET(sock, &readfds);
+    FD_SET(sockDeamon, &readfds);
+    if(sock > sockDeamon) n = sock + 1;
+    else n = sockDeamon + 1;
+
+    tv.tv_sec = 10;
+    tv.tv_usec = 500000;
+
     while(rest){
         printf("loop\n");
-        int n , rv;
-        struct timeval tv;
-        fd_set readfds;
-
-        FD_SET(sock, &readfds);
-        FD_SET(sockDeamon, &readfds);
-        if(sock > sockDeamon) n = sock + 1;
-        else n = sockDeamon + 1;
-
         tv.tv_sec = 10;
         tv.tv_usec = 500000;
-        
         rv = select(n,&readfds,NULL,NULL,&tv);
         printf("select\n");
         if(rv < 0){
@@ -141,7 +142,7 @@ void sproxy(int port) {
         int rev, rev2;
         printf("rev\n");
         if(FD_ISSET(sock, &readfds)){
-            rev = recv(sock,buff,MAX_LEN,0);
+            rev = recv(acc,buff,MAX_LEN,0);
             if(rev < 0){
                 printf("break\n");
                 break;
@@ -152,7 +153,7 @@ void sproxy(int port) {
         if(FD_ISSET(sockDeamon,&readfds)){
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
             if(rev2 < 0){
-                printf("break\n");
+                printf("break2\n");
                 break;
             }
             send_data(sock, buff2, rev2);
@@ -160,8 +161,6 @@ void sproxy(int port) {
       }
       printf("end loop\n");
     }
-    printf("end outer loop\n");
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////  
 int main(int argc, char* argv[]) {
     if(argc == 2){
