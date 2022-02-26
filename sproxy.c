@@ -127,17 +127,19 @@ void sproxy(int port) {
         FD_SET(sock, &readfds);
         FD_SET(sockDeamon, &readfds);
         if(sock > sockDeamon) n = sock + 1;
-        else n = sockDeamon +1;
+        else n = sockDeamon + 1;
 
         tv.tv_sec = 10;
         tv.tv_usec = 500000;
         
         rv = select(n,&readfds,NULL,NULL,&tv);
+        printf("select\n");
         if(rv < 0){
             fprintf(stderr,"Error in select");
             exit(1);
         }
         int rev, rev2;
+        printf("rev\n");
         if(FD_ISSET(sock, &readfds)){
             rev = recv(sock,buff,MAX_LEN,0);
             if(rev < 0){
@@ -146,16 +148,19 @@ void sproxy(int port) {
             }
             send_data(sockDeamon, buff, rev);
         }
+        printf("rev2\n");
         if(FD_ISSET(sockDeamon,&readfds)){
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
-            if(rev < 0){
+            if(rev2 < 0){
                 printf("break\n");
                 break;
             }
             send_data(sock, buff2, rev2);
         }
       }
+      printf("end loop\n");
     }
+    printf("end outer loop\n");
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////  
 int main(int argc, char* argv[]) {
