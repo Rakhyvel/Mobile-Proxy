@@ -121,18 +121,15 @@ void sproxy(int port) {
     struct timeval tv;
     fd_set readfds;
 
-    FD_SET(acc, &readfds);
-    FD_SET(sockDeamon, &readfds);
-    if(acc > sockDeamon) n = acc + 1;
-    else n = sockDeamon + 1;
-
-    tv.tv_sec = 10;
-    tv.tv_usec = 500000;
-
     while(rest){
-        printf("loop\n");
+        FD_SET(acc, &readfds);
+        FD_SET(sockDeamon, &readfds);
+        if(acc > sockDeamon) n = acc + 1;
+        else n = sockDeamon + 1;
+
         tv.tv_sec = 10;
         tv.tv_usec = 500000;
+        printf("loop\n");
         rv = select(n,&readfds,NULL,NULL,&tv);
         printf("select\n");
         if(rv < 0){
