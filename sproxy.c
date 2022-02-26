@@ -116,6 +116,7 @@ void sproxy(int port) {
         perror("client failed connecting socket");
         exit(1);
     }
+    printf("created telnet socket\n");
     int rest = 1;
     while(rest){
         int n , rv;
@@ -138,14 +139,14 @@ void sproxy(int port) {
         int rev, rev2;
         if(FD_ISSET(sock, &readfds)){
             rev = recv(sock,buff,MAX_LEN,0);
-            if(rev <= 0){
+            if(rev < 0){
                 break;
             }
             send_data(sockDeamon, buff, rev);
         }
         if(FD_ISSET(sockDeamon,&readfds)){
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
-            if(rev <= 0){
+            if(rev < 0){
                 break;
             }
             send_data(sock, buff2, rev2);
