@@ -55,61 +55,45 @@ void cproxy(int port, char* ipText , char* portText) {
     char buff2[1024];
     int MAX_LEN = 1024;
     int acc, b, localSock;
-    //char ipText = "127.0.0.1";
-    //char portText = "23";
-    //int c; // Char retrieved from input stream, will be EOF at end of file
-    //unsigned int buffer_pos = 0; // cursor into buffer
-    //int net_buffer_pos; // big endian version of buffer_pos
-    //char buffer[1024]; // character buffer to store input
-    struct sockaddr_in serverAddr2; // address to connect to
-    int sock; // socket to send to
-    //int end = 1;
-    // Create socket 'sock'
-    sock = socket(PF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in sproxyAddr; // address to connect to
+    struct sockaddr_in cproxyAddr, telnetAddr;
 
-    if (sock == -1) {
-        // err
+    int telnetSock = socket(PF_INET, SOCK_STREAM, 0);
+    cproxyAddr.sin_family = AF_INET;
+    cproxyAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
+    cproxyAddr.sin_port = htons(port);// added local to hold spot 
+    if (telnetSock < 0){
+        fprintf(stderr,"Unable to create socket");
+        exit(1);
+    }
+    if (bind(telnetSock, (struct sockaddr*)&cproxyAddr, sizeof(cproxyAddr)) < 0){
+        fprintf(stderr,"Unable to Bind");
+        exit(1);
+    }
+    if (listen(telnetSock, 5) < 0){
+        fprintf(stderr,"Unable to Listen");
+        exit(1);
+    }
+    socklen_t telnetLen;
+    telnetLen  = sizeof(telnetAddr);
+    int telnetCon = accept(telnetSock, (struct sockaddr *)&telnetAddr, &telnetLen);
+
+    // Connect to sproxy
+    int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
+    if (sproxySock == -1) {
         perror("client failed creating socket");
         exit(1);
     }
-
-    // Connect socket
-    serverAddr2.sin_family = AF_INET;
-    serverAddr2.sin_port = htons(atoi(portText));
-    inet_pton(AF_INET, ipText, &serverAddr2.sin_addr);
-    if(connect(sock, (struct sockaddr*)&serverAddr2, sizeof(serverAddr2)) == -1) {
+    sproxyAddr.sin_family = AF_INET;
+    sproxyAddr.sin_port = htons(atoi(portText));
+    inet_pton(AF_INET, ipText, &sproxyAddr.sin_addr);
+    if (connect(sproxySock, (struct sockaddr*)&sproxyAddr, sizeof(sproxyAddr)) == -1) {
         perror("client failed connecting socket");
         exit(1);
     }
 
-    struct sockaddr_in serverAddr, clientAddr;
-
-    localSock = socket(PF_INET, SOCK_STREAM, 0);
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
-    serverAddr.sin_port = htons(port);// added local to hold spot 
-    
-    if(localSock < 0){
-    fprintf(stderr,"Unable to create socket");
-    exit(1);
-    }
-
-    b = bind(localSock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
-    if(b < 0){
-    fprintf(stderr,"Unable to Bind");
-        exit(1);
-    }
-
-    if(listen(localSock, 5) < 0){
-        fprintf(stderr,"Unable to Listen");
-        exit(1);
-    }
-
     //accept the conection to telnet
-    socklen_t client_len;
-    client_len  = sizeof(clientAddr);
     while(1) {
-        acc = accept(localSock, (struct sockaddr *)&clientAddr,&client_len);
         if(acc < 0){
             fprintf(stderr,"Unable to accept connection");
             exit(1);
@@ -122,14 +106,14 @@ void cproxy(int port, char* ipText , char* portText) {
             fd_set readfds;
 
             FD_SET(acc, &readfds);
-            FD_SET(sock, &readfds);
-            if(acc > sock) n = acc + 1;
-            else n = sock +1;
+            FD_SET(sproxySock, &readfds);
+            if(acc > sproxySock) n = acc + 1;
+            else n = sproxySock +1;
 
             tv.tv_sec = 10;
             tv.tv_usec = 500000;
             
-            rv = select(n,&readfds,NULL,NULL,&tv);
+            rv = select(n, &readfds, NULL, NULL, &tv);
             if(rv < 0){
                 fprintf(stderr,"Error in select");
                 exit(1);
@@ -140,11 +124,11 @@ void cproxy(int port, char* ipText , char* portText) {
                 if(rev <= 0){
                     break;
                 }
-                send_data(sock, buff, rev);
+                send_data(sproxySock, buff, rev);
             }
-            if(FD_ISSET(sock,&readfds)){
-                rev2 = recv(sock, buff2, MAX_LEN,0);
-                if(rev <= 0){
+            if (FD_ISSET(sproxySock, &readfds)){
+                rev2 = recv(sproxySock, buff2, MAX_LEN,0);
+                if (rev <= 0){
                     break;
                 }
                 send_data(acc, buff2, rev2);
