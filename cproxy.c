@@ -54,7 +54,7 @@ void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
     char buff2[1024];
     int MAX_LEN = 1024;
-    int acc, b, l, sock;
+    int acc, b, l, localSock;
     while(1){
 
     //char ipText = "127.0.0.1";
@@ -86,23 +86,23 @@ void cproxy(int port, char* ipText , char* portText) {
 
     struct sockaddr_in serverAddr, clientAddr;
 
-    sock = socket(PF_INET, SOCK_STREAM, 0);
+    localSock = socket(PF_INET, SOCK_STREAM, 0);
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
     serverAddr.sin_port = htons(port);// added local to hold spot 
     
-    if(sock < 0){
+    if(localSock < 0){
       fprintf(stderr,"Unable to create socket");
       exit(1);
     }
 
-    b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
+    b = bind(localSock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(b < 0){
 	fprintf(stderr,"Unable to Bind");
         exit(1);
     }
 
-    l = listen(sock,5);// pending connections on socket
+    l = listen(localSock,5);// pending connections on socket
     if(l < 0){
         fprintf(stderr,"Unable to Listen");
         exit(1);
@@ -111,7 +111,7 @@ void cproxy(int port, char* ipText , char* portText) {
     //accept the conection
     socklen_t client_len;
     client_len  = sizeof(clientAddr);
-    acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
+    acc = accept(localSock,(struct sockaddr *)&clientAddr,&client_len);
     if(acc < 0){
         fprintf(stderr,"Unable to accept connection");
         exit(1);
@@ -124,9 +124,9 @@ void cproxy(int port, char* ipText , char* portText) {
         struct timeval tv;
         fd_set readfds;
 
-        FD_SET(sock, &readfds);
+        FD_SET(localSock, &readfds);
         FD_SET(sockDeamon, &readfds);
-        if(sock > sockDeamon) n = sock + 1;
+        if(localSock > sockDeamon) n = localSock + 1;
         else n = sockDeamon +1;
 
         tv.tv_sec = 10;
@@ -138,8 +138,8 @@ void cproxy(int port, char* ipText , char* portText) {
             exit(1);
         }
         int rev, rev2;
-        if(FD_ISSET(sock, &readfds)){
-            rev = recv(sock,buff,MAX_LEN,0);
+        if(FD_ISSET(localSock, &readfds)){
+            rev = recv(localSock,buff,MAX_LEN,0);
             if(rev <= 0){
                 break;
             }
@@ -150,7 +150,7 @@ void cproxy(int port, char* ipText , char* portText) {
             if(rev <= 0){
                 break;
             }
-            send_data(sock, buff2, rev2);
+            send_data(localSock, buff2, rev2);
         }
       }
     }
