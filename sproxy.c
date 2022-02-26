@@ -70,13 +70,13 @@ void sproxy(int port) {
 
     b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(b < 0){
-	fprintf(stderr,"Unable to Bind");
+	fprintf(stderr,"Unable to Bind\n");
         exit(1);
     }
 
     l = listen(sock,5);// pending connections on socket
     if(l < 0){
-        fprintf(stderr,"Unable to Listen");
+        fprintf(stderr,"Unable to Listen\n");
         exit(1);
     }
 
@@ -89,6 +89,7 @@ void sproxy(int port) {
         exit(1);
     }
 /////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon//
+    printf("looking for telnet\n");
     char ipText[] = "127.0.0.1";
     char portText[] = "23";
     //int c; // Char retrieved from input stream, will be EOF at end of file
