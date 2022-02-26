@@ -82,11 +82,6 @@ void sproxy(int port) {
     //accept the conection
     socklen_t client_len;
     client_len  = sizeof(clientAddr);
-    acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
-    if(acc < 0){
-        fprintf(stderr,"Unable to accept connection");
-        exit(1);
-    }
 /////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon//
     printf("looking for telnet\n");
     char ipText[] = "127.0.0.1";
@@ -131,6 +126,11 @@ void sproxy(int port) {
 
     while(rest){
         printf("loop\n");
+        acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
+        if(acc < 0){
+           fprintf(stderr,"Unable to accept connection");
+           exit(1);
+        }
         tv.tv_sec = 10;
         tv.tv_usec = 500000;
         rv = select(n,&readfds,NULL,NULL,&tv);
@@ -153,7 +153,7 @@ void sproxy(int port) {
         if(FD_ISSET(sockDeamon,&readfds)){
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
             if(rev2 < 0){
-                printf("break2\n");
+                printf("break2%d\n", rev2);
                 break;
             }
             send_data(sock, buff2, rev2);
