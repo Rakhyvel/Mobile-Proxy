@@ -170,7 +170,7 @@ void sproxy(int port) {
       }
       close(sockDeamon);
       close(acc);
-      close(sock);
+      //close(sock);
     }
       //printf("end program\n");
     }
