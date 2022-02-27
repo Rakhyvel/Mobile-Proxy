@@ -17,21 +17,6 @@
 
 #define MAX(x, y) (x > y ? x : y)
 
-
-// static bool recv_data(int sock, char* data, int num_bytes) {
-//     int bytes_recv;
-//     do {
-//         bytes_recv = recv(sock, data, num_bytes, 0);
-//         if (bytes_recv <= 0) {
-//             return true;
-//         } else {
-//             data += bytes_recv;
-//             num_bytes -= bytes_recv;
-//         }
-//     } while(num_bytes > 0);
-//     return false;
-// }
-
 /*
  * Takes in a socket, some data, and the length of the data and ensures that
  * the entire chunk of data is transfered
@@ -41,7 +26,7 @@ static void send_data(int sock, char* data, int num_bytes) {
     do {
         bytes_sent = send(sock, data, num_bytes, 0);
         if (bytes_sent == -1) {
-            perror("client failed recv data:");
+            perror("failed send data:");
             exit(1);
         } else {
             data += bytes_sent;
@@ -50,12 +35,14 @@ static void send_data(int sock, char* data, int num_bytes) {
     } while(num_bytes > 0);
 }
 /* 
- * Awaits a connection from cprocy when connected conncts to telnet deamon
+ * Connects to sproxy, then awaits a connection from telnet and forwards data
+ * between telnet and sproxy
  */
 void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
     char buff2[1024];
     int MAX_LEN = 1024;
+    memset(buff2, 0, MAX_LEN);
     struct sockaddr_in sproxyAddr; // address of sproxy
     struct sockaddr_in cproxyAddr; // self address
     struct sockaddr_in telnetAddr; // address for telnet connection
@@ -96,10 +83,11 @@ void cproxy(int port, char* ipText , char* portText) {
         // Accept new telnet connection
         socklen_t telnetLen;
         telnetLen  = sizeof(telnetAddr);
-        int telnetCon = accept(telnetSock, (struct sockaddr *)&telnetAddr, &telnetLen);
+        int telnetCon = accept(telnetSock, (struct sockaddr*)&telnetAddr, &telnetLen);
+        printf("telnet connection accepted\n");
 
         int rest = 1;
-        while(rest){
+        while (rest) {
             struct timeval tv;
             fd_set readfds;
 
@@ -118,18 +106,24 @@ void cproxy(int port, char* ipText , char* portText) {
 
             // if input from telnet, send to sproxy
             if (FD_ISSET(telnetSock, &readfds)) {
+                printf("recv data from telnet...\n");
+                memset(buff, 0, MAX_LEN);
                 int rev = recv(telnetCon, buff, MAX_LEN, 0);
-                if (rev <= 0){
+                if (rev <= 0) {
                     break;
                 }
+                printf("telnet data: %s\n", buff);
                 send_data(sproxySock, buff, rev);
             }
             // if input from sproxy, send to telnet
             if (FD_ISSET(sproxySock, &readfds)) {
+                printf("recv data from sproxy...\n");
+                memset(buff2, 0, MAX_LEN);
                 int rev2 = recv(sproxySock, buff2, MAX_LEN, 0);
-                if (rev2 <= 0){
+                if (rev2 <= 0) {
                     break;
                 }
+                printf("sproxy data: %s\n", buff2);
                 send_data(telnetCon, buff2, rev2);
             }
         }
