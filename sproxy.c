@@ -121,9 +121,9 @@ void sproxy(int port) {
     struct timeval tv;
     fd_set readfds;
 
-    FD_SET(sock, &readfds);
+    FD_SET(acc, &readfds);
     FD_SET(sockDeamon, &readfds);
-    if(sock > sockDeamon) n = sock + 1;
+    if(acc > sockDeamon) n = acc + 1;
     else n = sockDeamon + 1;
 
     tv.tv_sec = 10;
@@ -141,7 +141,7 @@ void sproxy(int port) {
         }
         int rev, rev2;
         printf("rev\n");
-        if(FD_ISSET(sock, &readfds)){
+        if(FD_ISSET(acc, &readfds)){
             rev = recv(acc,buff,MAX_LEN,0);
             if(rev < 0){
                 printf("break\n");
