@@ -93,7 +93,7 @@ void cproxy(int port, char* ipText , char* portText) {
 
             FD_SET(telnetSock, &readfds);
             FD_SET(sproxySock, &readfds);
-            int n = MAX(telnetCon, sproxySock) + 1;
+            int n = MAX(telnetSock, sproxySock) + 1;
 
             tv.tv_sec = 10;
             tv.tv_usec = 500000;
