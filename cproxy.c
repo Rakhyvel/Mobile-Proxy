@@ -15,6 +15,8 @@
 #include <errno.h>
 #endif
 
+#define MAX(x, y) (x > y ? x : y)
+
 
 // static bool recv_data(int sock, char* data, int num_bytes) {
 //     int bytes_recv;
@@ -103,7 +105,7 @@ void cproxy(int port, char* ipText , char* portText) {
 
             FD_SET(telnetSock, &readfds);
             FD_SET(sproxySock, &readfds);
-            int n = max(telnetCon, sproxySock) + 1;
+            int n = MAX(telnetCon, sproxySock) + 1;
 
             tv.tv_sec = 10;
             tv.tv_usec = 500000;
