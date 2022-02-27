@@ -26,7 +26,7 @@ static void send_data(int sock, char* data, int num_bytes) {
     do {
         bytes_sent = send(sock, data, num_bytes, 0);
         if (bytes_sent == -1) {
-            perror("failed send data:");
+            perror("failed send data");
             exit(1);
         } else {
             data += bytes_sent;
@@ -42,7 +42,6 @@ void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
     char buff2[1024];
     int MAX_LEN = 1024;
-    memset(buff2, 0, MAX_LEN);
     struct sockaddr_in sproxyAddr; // address of sproxy
     struct sockaddr_in cproxyAddr; // self address
     struct sockaddr_in telnetAddr; // address for telnet connection
@@ -89,14 +88,14 @@ void cproxy(int port, char* ipText , char* portText) {
         int rest = 1;
         while (rest) {
             struct timeval tv;
-            fd_set readfds;
-
-            FD_SET(telnetCon, &readfds);
-            FD_SET(sproxySock, &readfds);
-            int n = MAX(telnetCon, sproxySock) + 1;
-
             tv.tv_sec = 10;
             tv.tv_usec = 500000;
+
+            fd_set readfds;
+            FD_SET(telnetCon, &readfds);
+            FD_SET(sproxySock, &readfds);
+
+            int n = MAX(telnetCon, sproxySock) + 1;
             
             int rv = select(n, &readfds, NULL, NULL, &tv);
             if(rv < 0){
@@ -129,6 +128,7 @@ void cproxy(int port, char* ipText , char* portText) {
         }
     }
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////  
 int main(int argc, char* argv[]) {
     if(argc == 4){
