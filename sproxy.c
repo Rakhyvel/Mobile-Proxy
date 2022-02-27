@@ -148,7 +148,9 @@ void sproxy(int port) {
                 break;
             }
             printf("send\n");
-            send_data(sockDeamon, buff, rev);
+            send(sockDeamon, buff2,rev2, 0);
+            printf("sent");
+            //send_data(sockDeamon, buff, rev);
         }
         printf("rev2\n");
         if(FD_ISSET(sockDeamon,&readfds)){
@@ -158,7 +160,9 @@ void sproxy(int port) {
                 break;
             }
             printf("send2\n");
-            send_data(sock, buff2, rev2);
+            send(sock, buff2,rev2, 0);
+            printf("sent2");
+            //send_data(sock, buff2, rev2);
         }
         printf("end loop\n");
       }
