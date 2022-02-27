@@ -142,7 +142,9 @@ void sproxy(int port) {
         int rev, rev2;
         printf("rev\n");
         if(FD_ISSET(acc, &readfds)){
+            memset(buff, 0,MAX_LEN);
             rev = recv(acc,buff,MAX_LEN,0);
+            printf("%s\n",buff);
             if(rev < 0){
                 printf("break\n");
                 break;
@@ -154,7 +156,9 @@ void sproxy(int port) {
         }
         printf("rev2\n");
         if(FD_ISSET(sockDeamon,&readfds)){
+            memset(buff2, 0,MAX_LEN);
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
+            printf("%s\n",buff2);
             if(rev2 < 0){
                 printf("break2%d\n", rev2);
                 break;
