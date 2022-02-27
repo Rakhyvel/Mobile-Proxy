@@ -54,28 +54,9 @@ void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
     char buff2[1024];
     int MAX_LEN = 1024;
-    struct sockaddr_in sproxyAddr; // address to connect to
-    struct sockaddr_in cproxyAddr, telnetAddr;
-
-    int telnetSock = socket(PF_INET, SOCK_STREAM, 0);
-    cproxyAddr.sin_family = AF_INET;
-    cproxyAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
-    cproxyAddr.sin_port = htons(port);// added local to hold spot 
-    if (telnetSock < 0){
-        fprintf(stderr,"Unable to create socket");
-        exit(1);
-    }
-    if (bind(telnetSock, (struct sockaddr*)&cproxyAddr, sizeof(cproxyAddr)) < 0){
-        fprintf(stderr,"Unable to Bind");
-        exit(1);
-    }
-    if (listen(telnetSock, 5) < 0){
-        fprintf(stderr,"Unable to Listen");
-        exit(1);
-    }
-    socklen_t telnetLen;
-    telnetLen  = sizeof(telnetAddr);
-    int telnetCon = accept(telnetSock, (struct sockaddr *)&telnetAddr, &telnetLen);
+    struct sockaddr_in sproxyAddr; // address of sproxy
+    struct sockaddr_in cproxyAddr; // self address
+    struct sockaddr_in telnetAddr; // address for telnet connection
 
     // Connect to sproxy
     int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
@@ -91,38 +72,60 @@ void cproxy(int port, char* ipText , char* portText) {
         exit(1);
     }
 
-    //accept the conection to telnet
-    while(1) {
+    // Create telnet socket
+    int telnetSock = socket(PF_INET, SOCK_STREAM, 0);
+    cproxyAddr.sin_family = AF_INET;
+    cproxyAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
+    cproxyAddr.sin_port = htons(port); // added local to hold spot 
+    if (telnetSock < 0) {
+        fprintf(stderr,"Unable to create socket");
+        exit(1);
+    }
+    if (bind(telnetSock, (struct sockaddr*)&cproxyAddr, sizeof(cproxyAddr)) < 0) {
+        fprintf(stderr,"Unable to Bind");
+        exit(1);
+    }
+    if (listen(telnetSock, 5) < 0) {
+        fprintf(stderr,"Unable to Listen");
+        exit(1);
+    }
+
+    while (1) {
+        // Accept new telnet connection
+        socklen_t telnetLen;
+        telnetLen  = sizeof(telnetAddr);
+        int telnetCon = accept(telnetSock, (struct sockaddr *)&telnetAddr, &telnetLen);
+
         int rest = 1;
         while(rest){
-            int n , rv;
             struct timeval tv;
             fd_set readfds;
 
             FD_SET(telnetSock, &readfds);
             FD_SET(sproxySock, &readfds);
-            if(telnetCon > sproxySock) n = telnetCon + 1;
-            else n = sproxySock +1;
+            int n = max(telnetCon, sproxySock) + 1;
 
             tv.tv_sec = 10;
             tv.tv_usec = 500000;
             
-            rv = select(n, &readfds, NULL, NULL, &tv);
+            int rv = select(n, &readfds, NULL, NULL, &tv);
             if(rv < 0){
-                fprintf(stderr,"Error in select");
+                fprintf(stderr, "Error in select");
                 exit(1);
             }
-            int rev, rev2;
-            if(FD_ISSET(telnetSock, &readfds)){
-                rev = recv(telnetCon, buff, MAX_LEN,0);
-                if(rev <= 0){
+
+            // if input from telnet, send to sproxy
+            if (FD_ISSET(telnetSock, &readfds)) {
+                int rev = recv(telnetCon, buff, MAX_LEN, 0);
+                if (rev <= 0){
                     break;
                 }
                 send_data(sproxySock, buff, rev);
             }
-            if (FD_ISSET(sproxySock, &readfds)){
-                rev2 = recv(sproxySock, buff2, MAX_LEN,0);
-                if (rev <= 0){
+            // if input from sproxy, send to telnet
+            if (FD_ISSET(sproxySock, &readfds)) {
+                int rev2 = recv(sproxySock, buff2, MAX_LEN, 0);
+                if (rev2 <= 0){
                     break;
                 }
                 send_data(telnetCon, buff2, rev2);
