@@ -88,16 +88,10 @@ void sproxy(int port) {
            exit(1);
         }
 /////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon//
-    //printf("looking for telnet\n");
     char ipText[] = "127.0.0.1";
     char portText[] = "23";
-    //int c; // Char retrieved from input stream, will be EOF at end of file
-    //unsigned int buffer_pos = 0; // cursor into buffer
-    //int net_buffer_pos; // big endian version of buffer_pos
-    //char buffer[1024]; // character buffer to store input
     struct sockaddr_in serverAddr2; // address to connect to
     int sockDeamon; // socket to send to
-    //int end = 1;
     // Create socket 'sock'
     sockDeamon = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -115,7 +109,6 @@ void sproxy(int port) {
         perror("client failed connecting socket");
         exit(1);
     }
-    //printf("created telnet socket\n");
     int rest = 1;
     int n , rv;
     struct timeval tv;
@@ -129,50 +122,33 @@ void sproxy(int port) {
 
         tv.tv_sec = 10;
         tv.tv_usec = 500000;
-        //printf("loop\n");
         rv = select(n,&readfds,NULL,NULL,&tv);
-        //printf("select\n");
         if(rv < 0){
             fprintf(stderr,"Error in select");
             exit(1);
         }
         int rev, rev2;
-        //printf("rev\n");
         if(FD_ISSET(acc, &readfds)){
             memset(buff, 0,MAX_LEN);
             rev = recv(acc,buff,MAX_LEN,0);
-            //printf("%s\n",buff);
             if(rev <= 0){
-                printf("break\n");
                 break;
             }
-            //printf("send\n");
-            //send(sockDeamon, buff2,rev2, 0);
             send_data(sockDeamon, buff, rev);
-            //printf("sent");
         }
-        //printf("rev2\n");
         if(FD_ISSET(sockDeamon,&readfds)){
             memset(buff2, 0,MAX_LEN);
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
-            //printf("%s\n",buff2);
             if(rev2 <= 0){
-                //printf("break2%d\n", rev2);
                 break;
             }
-            //printf("send2\n");
-            //int se = send(sock, buff2,rev2, 0);
             
             send_data(acc, buff2, rev2);
-            //printf("sent2->\n");
         }
-        //printf("end loop\n");
       }
       close(sockDeamon);
       close(acc);
-      //close(sock);
     }
-      //printf("end program\n");
     }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////  
 int main(int argc, char* argv[]) {
