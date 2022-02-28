@@ -48,6 +48,20 @@ void cproxy(int port, char* ipText , char* portText) {
 
     int closed = 0;
     while (!closed) {
+        // Connect to sproxy
+        int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
+        if (sproxySock == -1) {
+            perror("client failed creating socket");
+            exit(1);
+        }
+        sproxyAddr.sin_family = AF_INET;
+        sproxyAddr.sin_port = htons(atoi(portText));
+        inet_pton(AF_INET, ipText, &sproxyAddr.sin_addr);
+        if (connect(sproxySock, (struct sockaddr*)&sproxyAddr, sizeof(sproxyAddr)) == -1) {
+            perror("client failed connecting socket");
+            exit(1);
+        }
+        
         // Create telnet socket
         int telnetSock = socket(PF_INET, SOCK_STREAM, 0);
         cproxyAddr.sin_family = AF_INET;
@@ -63,20 +77,6 @@ void cproxy(int port, char* ipText , char* portText) {
         }
         if (listen(telnetSock, 5) < 0) {
             fprintf(stderr,"Unable to Listen");
-            exit(1);
-        }
-
-        // Connect to sproxy
-        int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
-        if (sproxySock == -1) {
-            perror("client failed creating socket");
-            exit(1);
-        }
-        sproxyAddr.sin_family = AF_INET;
-        sproxyAddr.sin_port = htons(atoi(portText));
-        inet_pton(AF_INET, ipText, &sproxyAddr.sin_addr);
-        if (connect(sproxySock, (struct sockaddr*)&sproxyAddr, sizeof(sproxyAddr)) == -1) {
-            perror("client failed connecting socket");
             exit(1);
         }
 
