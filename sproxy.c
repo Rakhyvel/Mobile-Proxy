@@ -115,7 +115,7 @@ void sproxy(int port) {
         perror("client failed connecting socket");
         exit(1);
     }
-    printf("created telnet socket\n");
+    //printf("created telnet socket\n");
     int rest = 1;
     int n , rv;
     struct timeval tv;
