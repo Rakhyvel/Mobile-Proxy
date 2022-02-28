@@ -1,5 +1,3 @@
-server:
-	gcc -Wall -Werror main.c -o server
-
-client:
-	gcc -Wall -DCLIENT main.c -o client
+make:
+	gcc -Wall cproxy.c -o cproxy
+	gcc -Wall sproxy.c -o sproxy
