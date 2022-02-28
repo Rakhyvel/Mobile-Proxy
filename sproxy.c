@@ -55,9 +55,8 @@ void sproxy(int port) {
     char buff2[1024];
     int MAX_LEN = 1024;
     int acc, b, l, sock;
-    while(1){
     struct sockaddr_in serverAddr, clientAddr;
-
+    
     sock = socket(PF_INET, SOCK_STREAM, 0);
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
@@ -70,13 +69,13 @@ void sproxy(int port) {
 
     b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(b < 0){
-	fprintf(stderr,"Unable to Bind");
+	fprintf(stderr,"Unable to Bind\n");
         exit(1);
     }
-
+    while(1){
     l = listen(sock,5);// pending connections on socket
     if(l < 0){
-        fprintf(stderr,"Unable to Listen");
+        fprintf(stderr,"Unable to Listen\n");
         exit(1);
     }
 
@@ -84,20 +83,15 @@ void sproxy(int port) {
     socklen_t client_len;
     client_len  = sizeof(clientAddr);
     acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
-    if(acc < 0){
-        fprintf(stderr,"Unable to accept connection");
-        exit(1);
-    }
+        if(acc < 0){
+           fprintf(stderr,"Unable to accept connection");
+           exit(1);
+        }
 /////////////////////////////////////////////////////////////////////////////////////////////////////telnet daemon//
     char ipText[] = "127.0.0.1";
     char portText[] = "23";
-    //int c; // Char retrieved from input stream, will be EOF at end of file
-    //unsigned int buffer_pos = 0; // cursor into buffer
-    //int net_buffer_pos; // big endian version of buffer_pos
-    //char buffer[1024]; // character buffer to store input
     struct sockaddr_in serverAddr2; // address to connect to
     int sockDeamon; // socket to send to
-    //int end = 1;
     // Create socket 'sock'
     sockDeamon = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -108,50 +102,54 @@ void sproxy(int port) {
     }
 
     // Connect socket
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(atoi(portText));
+    serverAddr2.sin_family = AF_INET;
+    serverAddr2.sin_port = htons(atoi(portText));
     inet_pton(AF_INET, ipText, &serverAddr2.sin_addr);
     if(connect(sockDeamon, (struct sockaddr*)&serverAddr2, sizeof(serverAddr2)) == -1) {
         perror("client failed connecting socket");
         exit(1);
     }
     int rest = 1;
-    while(rest){
-        int n , rv;
-        struct timeval tv;
-        fd_set readfds;
+    int n , rv;
+    struct timeval tv;
+    fd_set readfds;
 
-        FD_SET(sock, &readfds);
+    while(rest){
+        FD_SET(acc, &readfds);
         FD_SET(sockDeamon, &readfds);
-        if(sock > sockDeamon) n = sock + 1;
-        else n = sockDeamon +1;
+        if(acc > sockDeamon) n = acc + 1;
+        else n = sockDeamon + 1;
 
         tv.tv_sec = 10;
         tv.tv_usec = 500000;
-        
         rv = select(n,&readfds,NULL,NULL,&tv);
         if(rv < 0){
             fprintf(stderr,"Error in select");
             exit(1);
         }
         int rev, rev2;
-        if(FD_ISSET(sock, &readfds)){
-            rev = recv(sock,buff,MAX_LEN,0);
+        if(FD_ISSET(acc, &readfds)){
+            memset(buff, 0,MAX_LEN);
+            rev = recv(acc,buff,MAX_LEN,0);
             if(rev <= 0){
                 break;
             }
             send_data(sockDeamon, buff, rev);
         }
         if(FD_ISSET(sockDeamon,&readfds)){
+            memset(buff2, 0,MAX_LEN);
             rev2 = recv(sockDeamon,buff2,MAX_LEN,0);
-            if(rev <= 0){
+            if(rev2 <= 0){
                 break;
             }
-            send_data(sock, buff2, rev2);
+            
+            send_data(acc, buff2, rev2);
         }
       }
+      close(sockDeamon);
+      close(acc);
     }
-}
+    }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////  
 int main(int argc, char* argv[]) {
     if(argc == 2){
