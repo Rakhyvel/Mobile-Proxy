@@ -61,7 +61,7 @@ void cproxy(int port, char* ipText , char* portText) {
             perror("client failed connecting socket");
             exit(1);
         }
-        
+
         // Create telnet socket
         int telnetSock = socket(PF_INET, SOCK_STREAM, 0);
         cproxyAddr.sin_family = AF_INET;
@@ -84,7 +84,6 @@ void cproxy(int port, char* ipText , char* portText) {
         socklen_t telnetLen;
         telnetLen  = sizeof(telnetAddr);
         int telnetCon = accept(telnetSock, (struct sockaddr*)&telnetAddr, &telnetLen);
-        printf("telnet connection accepted\n");
 
         int rest = 1;
         while (rest) {
@@ -106,25 +105,19 @@ void cproxy(int port, char* ipText , char* portText) {
 
             // if input from telnet, send to sproxy
             if (FD_ISSET(telnetCon, &readfds)) {
-                printf("recv data from telnet...\n");
-                memset(buff, 0, MAX_LEN);
                 int rev = recv(telnetCon, buff, MAX_LEN, 0);
                 if (rev <= 0) {
                     break;
                 }
-                printf("telnet data: %s\n", buff);
                 send_data(sproxySock, buff, rev);
             }
             // if input from sproxy, send to telnet
             if (FD_ISSET(sproxySock, &readfds)) {
-                printf("recv data from sproxy...\n");
-                memset(buff2, 0, MAX_LEN);
                 int rev2 = recv(sproxySock, buff2, MAX_LEN, 0);
                 if (rev2 <= 0) {
                     closed = 1;
                     break;
                 }
-                printf("sproxy data: %s\n", buff2);
                 send_data(telnetCon, buff2, rev2);
             }
         }
