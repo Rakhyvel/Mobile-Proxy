@@ -56,7 +56,7 @@ void sproxy(int port) {
     int MAX_LEN = 1024;
     int acc, b, l, sock;
     struct sockaddr_in serverAddr, clientAddr;
-    while(1){
+    
     sock = socket(PF_INET, SOCK_STREAM, 0);
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
@@ -72,7 +72,7 @@ void sproxy(int port) {
 	fprintf(stderr,"Unable to Bind\n");
         exit(1);
     }
-
+    while(1){
     l = listen(sock,5);// pending connections on socket
     if(l < 0){
         fprintf(stderr,"Unable to Listen\n");
