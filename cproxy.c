@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "message.h"
+#include "queue.h"
 #ifdef _WIN64
 #include <winsock.h>
 #else
@@ -18,29 +20,32 @@
 #define MAX(x, y) (x > y ? x : y)
 
 /*
- * Takes in a socket, some data, and the length of the data and ensures that
- * the entire chunk of data is transfered
- */
-static void send_data(int sock, char* data, int num_bytes) {
-    int bytes_sent;
-    do {
-        bytes_sent = send(sock, data, num_bytes, 0);
-        if (bytes_sent == -1) {
-            perror("failed send data");
-            exit(1);
-        } else {
-            data += bytes_sent;
-            num_bytes -= bytes_sent;
-        }
-    } while(num_bytes > 0);
-}
+TODO:
+- header
+    - differentiates between heartbeat and traffic
+    - relay traffic, not heartbeats
+    - sequence num, ack num, session ID?
+- timer (cproxy and sproxy)
+    - IF telnet traffic OR heartbeat THEN reset timer
+    - ELSE send heartbeat every second
+    - lose connection if three consecutive lost heartbeats
+        - close the disconnected socket
+- retransmission
+    - resend 'packets' that are lost during reconnection
+    - keep track of what's been sent
+    - keep track of what's been acknowledged
+    - buffer what's not been acknowledged yet
+    - sequence number, acknowledgement number
+- differentiate a new telnet session from a reconnected telnet session
+    - session ID
+*/
+
 /* 
  * Connects to sproxy, then awaits a connection from telnet and forwards data
  * between telnet and sproxy
  */
 void cproxy(int port, char* ipText , char* portText) {
     char buff[1024];
-    char buff2[1024];
     int MAX_LEN = 1024;
     struct sockaddr_in sproxyAddr; // address of sproxy
     struct sockaddr_in cproxyAddr; // self address
@@ -49,6 +54,7 @@ void cproxy(int port, char* ipText , char* portText) {
     int closed = 0;
     while (!closed) {
         // Connect to sproxy
+        int session_id = 1234;
         int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
         if (sproxySock == -1) {
             perror("client failed creating socket");
@@ -86,7 +92,7 @@ void cproxy(int port, char* ipText , char* portText) {
         int telnetCon = accept(telnetSock, (struct sockaddr*)&telnetAddr, &telnetLen);
 
         int rest = 1;
-        while (rest) {
+        while (rest && !closed) {
             struct timeval tv;
             tv.tv_sec = 10;
             tv.tv_usec = 500000;
@@ -109,17 +115,31 @@ void cproxy(int port, char* ipText , char* portText) {
                 if (rev <= 0) {
                     break;
                 }
-                send_data(sproxySock, buff, rev);
+                push_msg(DATA, session_id, buff, rev);
             }
             // if input from sproxy, send to telnet
             if (FD_ISSET(sproxySock, &readfds)) {
-                int rev2 = recv(sproxySock, buff2, MAX_LEN, 0);
-                if (rev2 <= 0) {
+                char* buff2;
+                Header header = recv_header(sproxySock, &buff2);
+                switch(header.type) {
+                case DATA:
+                    send_raw(telnetCon, buff2, header.length);
+                    free(buff2);
+                    push_msg(ACK, session_id, NULL, 0);
+                    break;
+                case ACK:
+                    pop_front();
+                    break;
+                case HEARTBEAT:
+                    push_msg(ACK, session_id, NULL, 0);
+                    break;
+                case END:
                     closed = 1;
                     break;
                 }
-                send_data(telnetCon, buff2, rev2);
+                // TODO: reset unack counter
             }
+            send_front();
         }
         close(sproxySock);
         close(telnetCon);
