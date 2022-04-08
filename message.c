@@ -28,23 +28,6 @@ void send_raw(int sock, char* data, int num_bytes) {
 }
 
 /*
-Sends data through a socket. Should only be called by queue! Use push_msg if you're a proxy
-
-@param sock         socket to send on
-@param data         a pointer to a character buffer to where the data is stored
-@param num_bytes    how long the buffer is
-*/
-void send_header(int sock, char* data, Header header) {
-    // Send header
-    send_raw(sock, (char*)(&data), sizeof(header));
-
-    // Send data
-    if (header.type == DATA) {
-        send_raw(sock, data, header.length);
-    }
-}
-
-/*
 Receives raw data from a socket WITHOUT header and puts it into a buffer
 
 @param sock         socket to receive on
