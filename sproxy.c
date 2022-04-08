@@ -1,4 +1,5 @@
 
+#include "message.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -13,9 +14,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 #endif
 
-
+time_t proxytime = 0;
+int heart_beat_count_fails = 0;
+int crrent_id = 0;
 // static bool recv_data(int sock, char* data, int num_bytes) {
 //     int bytes_recv;
 //     do {
@@ -29,7 +33,32 @@
 //     } while(num_bytes > 0);
 //     return false;
 // }
+void start_time(){
+    time_t sec;
+    sec = time(NULL);
+    proxytime = sec;
+}
 
+int time_from_heart(){
+    time_t sec_c;
+    sec_c = time(NULL);
+    return sec_c - proxytime;
+}
+int send_heart_beat(Header *header,int sock){
+    send_header(sock, NULL, 0, HEARTBEAT);  
+}
+int test_heart_beat(Header *header,int sock){
+    if(heart_beat_count_fails > 3){
+        return -1;
+    }
+    if(header->type == DATA || header->type == HEARTBEAT){
+        heart_beat_count_fails = 0;
+    }else if(time_from_heart() > 1){
+        send_heart_beat(header,sock);
+        heart_beat_count_fails++;
+        start_time();
+    }
+}
 /*
  * Takes in a socket, some data, and the length of the data and ensures that
  * the entire chunk of data is transfered
