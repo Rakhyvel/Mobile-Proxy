@@ -6,7 +6,7 @@
 
 typedef struct queueNode {
     Header header;
-    char* data; // Allocate a new buffer on the heap for this!
+    char* data; // will allocate a new buffer on the heap for this!
     bool awaiting_ack;
     struct queueNode* next;
 } QueueNode;
@@ -22,7 +22,8 @@ void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
     node->header.length = num_bytes;
     node->header.session_id = session_id;
     node->header.msg_num = ++num_msgs;
-    node->data = data;
+    node->data = malloc(num_bytes);
+    strncpy(node->data, data, num_bytes);
     node->awaiting_ack = false;
     node->next = NULL;
 

@@ -115,9 +115,7 @@ void cproxy(int port, char* ipText , char* portText) {
                 if (rev <= 0) {
                     break;
                 }
-                char* data = malloc(rev);
-                strncpy(data, buff, rev);
-                push_msg(DATA, session_id, data, rev);
+                push_msg(DATA, session_id, buff, rev);
             }
             // if input from sproxy, send to telnet
             if (FD_ISSET(sproxySock, &readfds)) {
