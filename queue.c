@@ -14,6 +14,7 @@ typedef struct queueNode {
 static QueueNode* queue = NULL;
 static int num_msgs = 0;
 
+// Pushes a message to be sent onto the back of the queue
 void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
     // create node
     QueueNode* node = calloc(sizeof(QueueNode), 1);
@@ -37,6 +38,7 @@ void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
     }
 }
 
+// Pops the front of the queue. NO CHECKS IF THIS IS GOOD OR NOT! MAYBE BUG!!
 void pop_front() {
     // pop front of queue
     QueueNode* node = queue;
@@ -44,6 +46,7 @@ void pop_front() {
     free(node->data);
 }
 
+// Sends the message at the front of the queue if it has not been sent already
 void send_front(int sock) {
     // if the front message is not awaiting ack, send, mark awaiting_ack
     if (!queue->awaiting_ack) {
