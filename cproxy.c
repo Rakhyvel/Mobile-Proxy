@@ -139,7 +139,9 @@ void cproxy(int port, char* ipText , char* portText) {
                     closed = 1;
                     break;
                 }
+                // TODO: reset unack counter
             }
+            send_front();
         }
         close(sproxySock);
         close(telnetCon);
