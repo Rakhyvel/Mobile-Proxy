@@ -8,16 +8,19 @@ cast address to a character array to send through socket
 typedef struct {
     char type;
     int length;
+    int session_id;
+    int msg_num;
 } Header;
 
 typedef enum {
-    HEARTBEAT,
     DATA,
+    ACK,
+    HEARTBEAT,
     END
 } MessageType;
 
 void send_raw(int sock, char* data, int num_bytes);
-void send_header(int sock, char* data, int num_bytes, MessageType type);
+void send_header(int sock, char* data, int num_bytes, Header header);
 int recv_raw(int sock, char* data, int num_bytes);
 Header recv_header(int sock, char** data);
 

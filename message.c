@@ -34,9 +34,8 @@ Sends data through a socket
 @param data         a pointer to a character buffer to where the data is stored
 @param num_bytes    how long the buffer is
 */
-void send_header(int sock, char* data, int num_bytes, MessageType type) {
+void send_header(int sock, char* data, int num_bytes, Header header) {
     // Send header
-    Header header = {type, num_bytes};
     send_raw(sock, (char*)(&data), sizeof(header));
 
     // Send data
