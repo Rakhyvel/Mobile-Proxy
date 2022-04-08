@@ -54,6 +54,7 @@ void cproxy(int port, char* ipText , char* portText) {
     int closed = 0;
     while (!closed) {
         // Connect to sproxy
+        int session_id = 1234;
         int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
         if (sproxySock == -1) {
             perror("client failed creating socket");
@@ -116,21 +117,26 @@ void cproxy(int port, char* ipText , char* portText) {
                 }
                 char* data = malloc(rev);
                 strncpy(data, buff, rev);
-                push_msg(DATA, 0, data, rev);
+                push_msg(DATA, session_id, data, rev);
             }
             // if input from sproxy, send to telnet
             if (FD_ISSET(sproxySock, &readfds)) {
                 char* buff2;
                 Header header = recv_header(sproxySock, &buff2);
                 switch(header.type) {
-                case HEARTBEAT: // Just ignore heartbeats
-                    break;
-                case END:
-                    closed = 1;
-                    break;
                 case DATA:
                     send_raw(telnetCon, buff2, header.length);
                     free(buff2);
+                    push_msg(ACK, session_id, NULL, 0);
+                    break;
+                case ACK:
+                    pop_front();
+                    break;
+                case HEARTBEAT:
+                    push_msg(ACK, session_id, NULL, 0);
+                    break;
+                case END:
+                    closed = 1;
                     break;
                 }
             }

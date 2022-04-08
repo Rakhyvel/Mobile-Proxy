@@ -20,7 +20,6 @@ typedef enum {
 } MessageType;
 
 void send_raw(int sock, char* data, int num_bytes);
-void send_header(int sock, char* data, Header header);
 int recv_raw(int sock, char* data, int num_bytes);
 Header recv_header(int sock, char** data);
 

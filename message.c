@@ -28,24 +28,7 @@ void send_raw(int sock, char* data, int num_bytes) {
 }
 
 /*
-Sends data through a socket
-
-@param sock         socket to send on
-@param data         a pointer to a character buffer to where the data is stored
-@param num_bytes    how long the buffer is
-*/
-void send_header(int sock, char* data, Header header) {
-    // Send header
-    send_raw(sock, (char*)(&data), sizeof(header));
-
-    // Send data
-    if (header.type == DATA) {
-        send_raw(sock, data, header.length);
-    }
-}
-
-/*
-Receives data WITHOUT header from a socket and puts it into a buffer
+Receives raw data from a socket WITHOUT header and puts it into a buffer
 
 @param sock         socket to receive on
 @param data         a pointer to a character buffer to place the received data in
@@ -76,7 +59,7 @@ int recv_raw(int sock, char* data, int num_bytes) {
 }
 
 /*
-Receives data from a socket and puts it into a buffer and checks header
+Receives data from a socket. Allocates buffer and fills with data, returns header
 
 @param sock         socket to receive on
 @param data         a pointer to a pointer to character buffer that will be filled with data.

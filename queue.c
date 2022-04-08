@@ -47,7 +47,13 @@ void pop_front() {
 void send_front(int sock) {
     // if the front message is not awaiting ack, send, mark awaiting_ack
     if (!queue->awaiting_ack) {
-        send_header(sock, queue->data, queue->header);
+        // Send header
+        send_raw(sock, (char*)(&queue->header), sizeof(queue->header));
+
+        // Send data
+        if (header.type == DATA) {
+            send_raw(sock, queue->data, queue->header.length);
+        }
         queue->awaiting_ack = true;
     }
 }
