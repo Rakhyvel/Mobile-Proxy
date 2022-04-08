@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "message.h"
+#include "queue.h"
 #ifdef _WIN64
 #include <winsock.h>
 #else
@@ -113,7 +114,9 @@ void cproxy(int port, char* ipText , char* portText) {
                 if (rev <= 0) {
                     break;
                 }
-                send_header(sproxySock, buff, rev, DATA);
+                char* data = malloc(rev);
+                strncpy(data, buff, rev);
+                push_msg(DATA, 0, data, rev);
             }
             // if input from sproxy, send to telnet
             if (FD_ISSET(sproxySock, &readfds)) {

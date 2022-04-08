@@ -34,13 +34,13 @@ Sends data through a socket
 @param data         a pointer to a character buffer to where the data is stored
 @param num_bytes    how long the buffer is
 */
-void send_header(int sock, char* data, int num_bytes, Header header) {
+void send_header(int sock, char* data, Header header) {
     // Send header
     send_raw(sock, (char*)(&data), sizeof(header));
 
     // Send data
-    if (type == DATA) {
-        send_raw(sock, data, num_bytes);
+    if (header.type == DATA) {
+        send_raw(sock, data, header.length);
     }
 }
 

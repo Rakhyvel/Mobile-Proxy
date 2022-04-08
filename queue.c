@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static typedef struct queueNode {
+typedef struct queueNode {
     Header header;
     char* data; // Allocate a new buffer on the heap for this!
     bool awaiting_ack;
@@ -21,31 +21,33 @@ void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
     node->header.length = num_bytes;
     node->header.session_id = session_id;
     node->header.msg_num = ++num_msgs;
-    node.data = data;
-    node.awaiting_ack = false;
-    node.next = NULL;
+    node->data = data;
+    node->awaiting_ack = false;
+    node->next = NULL;
 
     // Place at end of queue
     if (queue == NULL) {
         queue = node;
     } else {
         QueueNode* curr = queue;
-        while (curr.next != NULL) {
-            curr = curr.next
+        while (curr->next != NULL) {
+            curr = curr->next;
         }
-        curr.next = node;
+        curr->next = node;
     }
 }
 
 void pop_front() {
     // pop front of queue
     QueueNode* node = queue;
-    queue = node.next;
-    free(node.data);
+    queue = node->next;
+    free(node->data);
 }
 
-void send_front() {
+void send_front(int sock) {
     // if the front message is not awaiting ack, send, mark awaiting_ack
-    send_header();
-    queue.awaiting_ack = true;
+    if (!queue->awaiting_ack) {
+        send_header(sock, queue->data, queue->header);
+        queue->awaiting_ack = true;
+    }
 }
