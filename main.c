@@ -155,10 +155,14 @@ void sproxy(int port) {
     int telnetDeamon_connection = connect_client("127.0.0.1", "23");
 
     int telnet_running = 0;
+    int ID = -1;
     while (telnet_running) {
-        int ID = 1234;
-        ////////////////////////////////////////////////
         int cproxy_connection = connect_server(port);
+        Header header = recv_header(cproxy_connection, NULL);
+        if (header.session_id != ID) {
+            printf("Session has changed!");
+            ID = header.session_id;
+        }
 
         int cproxy_connection_status;
         while (!(cproxy_connection_status = is_closed(telnetDeamon_connection, cproxy_connection, ID))) {
