@@ -103,6 +103,7 @@ void cproxy(int port, char* ipText , char* portText) {
 
     bool telnetRunning = true;
     while (telnetRunning) {
+        reset_queue();
         // Connect to sproxy
         int session_id = 1234;
         int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
