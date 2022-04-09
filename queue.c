@@ -71,8 +71,8 @@ void reset_await_status() {
 
 static void destroy_queue_node(QueueNode* node) {
     if (node != NULL) {
-        free(node->data);
         destroy_queue_node(node->next);
+        free(node->data);
     }
 }
 
