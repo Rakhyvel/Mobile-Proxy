@@ -20,6 +20,7 @@
 #define MAX(x, y) (x > y ? x : y)
 
 time_t proxytime = 0;
+time_t one_sec = 0;
 int heart_beat_count_fails = 0;
 int crrent_id = 0;
 
@@ -34,6 +35,21 @@ int time_from_heart() {
     sec_c = time(NULL);
     return sec_c - proxytime;
 }
+
+void start_heart_one_sec(){
+    time_t sec_one;
+    sec_one = time(NULL);
+    one_sec = sec_one;
+}
+
+
+int time_from_last(){
+    time_t sec_one_c;
+    sec_one_c = time(NULL);
+    return sec_one_c - one_sec;
+
+}
+
 
 void send_heart_beat(Header header, int sock, int session_id) {
     send_header(sock, NULL, header); 
@@ -51,12 +67,20 @@ int test_heart_beat(int sock, int session_id) {
         return 1;
     }
 */
+
+    printf("time from hb%d\n",time_from_heart());
     if (header.type == DATA || header.type == HEARTBEAT || header.type == ACK) {
         heart_beat_count_fails = 0;
         start_time();
     }
-    send_heart_beat(header,sock,session_id); 
+    if(time_from_last() > 1){
+        printf("time from hb%d\n",time_from_last());
+        send_heart_beat(header,sock,session_id);
+        start_heart_one_sec();
+    } 
     if(time_from_heart() > 3){
+        printf("3sec stop\n");
+        printf("real time%d\n",time_from_heart());
         return 1;
     }
     return 0;
@@ -119,7 +143,7 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
 
     struct timeval tv;
     tv.tv_sec = 10;
-    tv.tv_usec = 500000;
+    tv.tv_usec = 1000000;
 
     fd_set readfds;
     FD_SET(telnet_connection, &readfds);

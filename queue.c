@@ -49,6 +49,9 @@ void pop_front() {
     printf("pop front\n");
     // pop front of queue
     QueueNode* node = queue;
+    if(queue == NULL){
+      return;
+    }
     queue = node->next;
     free(node->data);
 }
