@@ -46,7 +46,13 @@ int test_heart_beat(Header *header,int sock){
         start_time();
     }
 }
-int is_closed(int telnetCon, int sproxySock, int session_id) {
+
+
+
+#define MAX(x, y) (x > y ? x : y)
+
+// returns 0 if good, 1 if sproxy is closed, -1 if telnet is closed
+int is_closed(int telnetCon, int proxySock, int session_id) {
     char buff[1024];
     int MAX_LEN = 1024;
 
@@ -56,17 +62,17 @@ int is_closed(int telnetCon, int sproxySock, int session_id) {
 
     fd_set readfds;
     FD_SET(telnetCon, &readfds);
-    FD_SET(sproxySock, &readfds);
+    FD_SET(proxySock, &readfds);
 
-    int n = MAX(telnetCon, sproxySock) + 1;
+    int n = MAX(telnetCon, proxySock) + 1;
     
     int rv = select(n, &readfds, NULL, NULL, &tv);
-    if(rv < 0){
+    if (rv < 0){
         fprintf(stderr, "Error in select");
         exit(1);
     }
 
-    // if input from telnet, send to sproxy
+    // if input from telnet, send to proxy
     if (FD_ISSET(telnetCon, &readfds)) {
         int rev = recv(telnetCon, buff, MAX_LEN, 0);
         if (rev <= 0) {
@@ -74,10 +80,10 @@ int is_closed(int telnetCon, int sproxySock, int session_id) {
         }
         push_msg(DATA, session_id, buff, rev);
     }
-    // if input from sproxy, send to telnet
-    if (FD_ISSET(sproxySock, &readfds)) {
+    // if input from proxy, send to telnet
+    if (FD_ISSET(proxySock, &readfds)) {
         char* buff2;
-        Header header = recv_header(sproxySock, &buff2);
+        Header header = recv_header(proxySock, &buff2);
         switch(header.type) {
         case DATA:
             send_raw(telnetCon, buff2, header.length);
@@ -98,6 +104,8 @@ int is_closed(int telnetCon, int sproxySock, int session_id) {
     send_front();
     return 0;
 }
+
+
 void sproxy(int port) {
     char buff[1024];
     char buff2[1024];
@@ -172,101 +180,64 @@ void sproxy(int port) {
     }
     close(acc);
     }
-/*
- * Takes in a socket, and a pointer to a buffer, and the length of the data and ensures that
- * the entire chunk of data is received
- * 
- * returns true when the connection is terminated
- */
-static bool recv_data(int sock, char* data, int num_bytes) {
-    int bytes_recv;
-    do {
-        bytes_recv = recv(sock, data, num_bytes, 0);
-        if (bytes_recv <= 0) {
-            return true;
-        } else {
-            data += bytes_recv;
-            num_bytes -= bytes_recv;
-        }
-    } while(num_bytes > 0);
-    return false;
-}
 
-/*
- * Takes in a socket, some data, and the length of the data and ensures that
- * the entire chunk of data is transfered
- */
-static void send_data(int sock, char* data, int num_bytes) {
-    int bytes_sent;
-    do {
-        bytes_sent = send(sock, data, num_bytes, 0);
-        if (bytes_sent == -1) {
-            perror("client failed recv data:");
-            exit(1);
-        } else {
-            data += bytes_sent;
-            num_bytes -= bytes_sent;
-        }
-    } while(num_bytes > 0);
-}
+void cproxy(int port, char* ipText , char* portText) {
+    struct sockaddr_in sproxyAddr; // address of sproxy
+    struct sockaddr_in cproxyAddr; // self address
+    struct sockaddr_in telnetAddr; // address for telnet connection    
 
-/*
-*Creats and returns socket
-*/
-int build_socket(){
-    int sock;
-    sock = socket (PF_INET, SOCK_STREAM,0); // using stream for TCP
-    if(sock < 0){
+    // Create telnet socket
+    int telnetSock = socket(PF_INET, SOCK_STREAM, 0);
+    cproxyAddr.sin_family = AF_INET;
+    cproxyAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
+    cproxyAddr.sin_port = htons(port); // added local to hold spot 
+    if (telnetSock < 0) {
         fprintf(stderr,"Unable to create socket");
         exit(1);
     }
-    return sock;
-}
-/*
- * Takes in an input stream, reads each character and adds it to a buffer, then
- * sends the size and buffer to a server connection
- */
-void client(FILE* in, char* ipText, char* portText) {
-    int c; // Char retrieved from input stream, will be EOF at end of file
-    unsigned int buffer_pos = 0; // cursor into buffer
-    int net_buffer_pos; // big endian version of buffer_pos
-    char buffer[1024]; // character buffer to store input
-    struct sockaddr_in serverAddr; // address to connect to
-    int sock; // socket to send to
-    int end = 1;
-    // Create socket 'sock'
-    sock = socket(PF_INET, SOCK_STREAM, 0);
-
-    if (sock == -1) {
-        // err
-        perror("client failed creating socket");
+    if (bind(telnetSock, (struct sockaddr*)&cproxyAddr, sizeof(cproxyAddr)) < 0) {
+        fprintf(stderr,"Unable to Bind");
+        exit(1);
+    }
+    if (listen(telnetSock, 5) < 0) {
+        fprintf(stderr,"Unable to Listen");
         exit(1);
     }
 
-    // Connect socket
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(atoi(portText));
-    inet_pton(AF_INET, ipText, &serverAddr.sin_addr);
-    if(connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {
-        perror("client failed connecting socket");
-        exit(1);
+    // Accept new telnet connection
+    socklen_t telnetLen;
+    telnetLen  = sizeof(telnetAddr);
+    int telnetCon = accept(telnetSock, (struct sockaddr*)&telnetAddr, &telnetLen);
+
+    bool telnetRunning = true;
+    while (telnetRunning) {
+        // Connect to sproxy
+        int session_id = 1234;
+        int sproxySock = socket(PF_INET, SOCK_STREAM, 0);
+        if (sproxySock == -1) {
+            perror("client failed creating socket");
+            exit(1);
+        }
+        sproxyAddr.sin_family = AF_INET;
+        sproxyAddr.sin_port = htons(atoi(portText));
+        inet_pton(AF_INET, ipText, &sproxyAddr.sin_addr);
+        if (connect(sproxySock, (struct sockaddr*)&sproxyAddr, sizeof(sproxyAddr)) == -1) {
+            perror("client failed connecting socket");
+            exit(1);
+        }
+
+        // sproxy send loop
+        push_msg(HEARTBEAT, session_id, NULL, 0);
+        int sproxy_connection_status;
+        while (!(sproxy_connection_status = is_closed(telnetCon, sproxySock, session_id)));
+        if (sproxy_connection_status == -1) {
+            telnetRunning = false;
+        }
+
+        close(sproxySock);
     }
-    while(end){ 
-     // Pop character from input stream until EOF 
-    for (;(c = fgetc(in)) != EOF && c != '\n' && buffer_pos < 1024; buffer_pos++) {
-        buffer[buffer_pos] = c;
-    }
-    
-    if(c == EOF){
-      break;
-    }
-    net_buffer_pos = htonl(buffer_pos);
-    // Send size and data
-    send_data(sock, (char*)&net_buffer_pos, sizeof(net_buffer_pos));
-    send_data(sock, buffer, buffer_pos);
-    buffer_pos = 0;
-    }
-    close(sock);
+    close(telnetCon);
+    close(telnetSock);
 }
 
 int main(int argc, char* argv[]) {
@@ -275,9 +246,7 @@ int main(int argc, char* argv[]) {
     if (argc < 3) {
         fprintf(stderr, "Usage: client <ip#> <port#>");
     } else {
-        char* ip = argv[1];
-        char* port = argv[2];
-        client(stdin, ip, port);
+        cproxy(atoi(argv[1]),argv[2],argv[3]);
     }
 #else
   //  printf("I am a server\n");
