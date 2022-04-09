@@ -20,7 +20,7 @@
 #define MAX(x, y) (x > y ? x : y)
 
 // returns 0 if good, 1 if sproxy is closed, -1 if telnet is closed
-int is_closed(int telnetCon, int sproxySock, int session_id) {
+int is_closed(int telnetCon, int proxySock, int session_id) {
     char buff[1024];
     int MAX_LEN = 1024;
 
@@ -30,17 +30,17 @@ int is_closed(int telnetCon, int sproxySock, int session_id) {
 
     fd_set readfds;
     FD_SET(telnetCon, &readfds);
-    FD_SET(sproxySock, &readfds);
+    FD_SET(proxySock, &readfds);
 
-    int n = MAX(telnetCon, sproxySock) + 1;
+    int n = MAX(telnetCon, proxySock) + 1;
     
     int rv = select(n, &readfds, NULL, NULL, &tv);
-    if(rv < 0){
+    if (rv < 0){
         fprintf(stderr, "Error in select");
         exit(1);
     }
 
-    // if input from telnet, send to sproxy
+    // if input from telnet, send to proxy
     if (FD_ISSET(telnetCon, &readfds)) {
         int rev = recv(telnetCon, buff, MAX_LEN, 0);
         if (rev <= 0) {
@@ -48,10 +48,10 @@ int is_closed(int telnetCon, int sproxySock, int session_id) {
         }
         push_msg(DATA, session_id, buff, rev);
     }
-    // if input from sproxy, send to telnet
-    if (FD_ISSET(sproxySock, &readfds)) {
+    // if input from proxy, send to telnet
+    if (FD_ISSET(proxySock, &readfds)) {
         char* buff2;
-        Header header = recv_header(sproxySock, &buff2);
+        Header header = recv_header(proxySock, &buff2);
         switch(header.type) {
         case DATA:
             send_raw(telnetCon, buff2, header.length);
@@ -119,6 +119,7 @@ void cproxy(int port, char* ipText , char* portText) {
         }
 
         // sproxy send loop
+        push_msg(HEARTBEAT, session_id, NULL, 0);
         int sproxy_connection_status;
         while (!(sproxy_connection_status = is_closed(telnetCon, sproxySock, session_id)));
         if (sproxy_connection_status == -1) {
