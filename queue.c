@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct queueNode {
     Header header;
@@ -55,7 +56,7 @@ void send_front(int sock) {
         send_raw(sock, (char*)(&queue->header), sizeof(queue->header));
 
         // Send data
-        if (header.type == DATA) {
+        if (queue->header.type == DATA) {
             send_raw(sock, queue->data, queue->header.length);
         }
         queue->awaiting_ack = true;
