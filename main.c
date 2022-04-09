@@ -158,7 +158,7 @@ void sproxy(int port) {
     // Connect to telnet daemon
     int telnetDeamon_connection = connect_client("127.0.0.1", "23");
 
-    int telnet_running = 0;
+    bool telnet_running = true;
     int ID = -1;
     while (telnet_running) {
         int cproxy_connection = connect_server(port);
