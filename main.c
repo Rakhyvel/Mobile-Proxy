@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 #endif
 
@@ -34,7 +35,7 @@ int time_from_heart() {
     return sec_c - proxytime;
 }
 
-int send_heart_beat(Header header, int sock, int session_id) {
+void send_heart_beat(Header header, int sock, int session_id) {
     send_header(sock, NULL, header); 
 }
 
@@ -49,6 +50,7 @@ int test_heart_beat(Header header, int sock, int session_id) {
         heart_beat_count_fails++;
         start_time();
     }
+    return 0;
 }
 
 // Used to connect to a server as a client
@@ -143,7 +145,9 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             return 1;
         }
         // TODO: reset unack counter
-        test_heart_beat(header,proxySock,session_id);
+        if (test_heart_beat(header,proxySock,session_id)) {
+            return 1;
+        }
     }
     send_front();
     return 0;
@@ -210,7 +214,7 @@ int main(int argc, char* argv[]) {
     }
 #else
     if(argc == 2){
-       server(atoi(argv[1]));
+       sproxy(atoi(argv[1]));
     }else{
        fprintf(stderr,"Error missing sport arg");
     }
