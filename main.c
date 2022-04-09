@@ -46,6 +46,7 @@ void start_heart_one_sec(){
 int time_from_last(){
     time_t sec_one_c;
     sec_one_c = time(NULL);
+    printf("time %d - %d\n",(int)sec_one_c,(int)one_sec);
     return sec_one_c - one_sec;
 
 }
@@ -68,7 +69,7 @@ int test_heart_beat(int sock, int session_id) {
     }
 */
 
-    printf("time from hb%d\n",time_from_heart());
+    printf("time gl hb t1 = %d t2 = %d\n",(int)proxytime,(int)one_sec);
     if (header.type == DATA || header.type == HEARTBEAT || header.type == ACK) {
         heart_beat_count_fails = 0;
         start_time();
@@ -190,12 +191,15 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             printf("end\n");
             return 1;
         }
+
+        }
         // TODO: reset unack counter
         if (test_heart_beat(proxySock, session_id)) {
             printf("hb end\n");
             return 1;
         }
-    }
+
+    
     send_front(proxySock);
     return 0;
 }
