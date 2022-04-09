@@ -78,4 +78,5 @@ static void destroy_queue_node(QueueNode* node) {
 
 void reset_queue() {
     destroy_queue_node(queue);
+    queue = NULL;
 }
