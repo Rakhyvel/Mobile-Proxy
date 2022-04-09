@@ -12,10 +12,42 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #endif
+
+time_t proxytime = 0;
+int heart_beat_count_fails = 0;
+int crrent_id = 0;
+
+void start_time(){
+    time_t sec;
+    sec = time(NULL);
+    proxytime = sec;
+}
+
+int time_from_heart(){
+    time_t sec_c;
+    sec_c = time(NULL);
+    return sec_c - proxytime;
+}
+int send_heart_beat(Header *header,int sock){
+    send_header(sock, NULL, 0, HEARTBEAT);  
+}
+int test_heart_beat(Header *header,int sock){
+    if(heart_beat_count_fails > 3){
+        return -1;
+    }
+    if(header->type == DATA || header->type == HEARTBEAT){
+        heart_beat_count_fails = 0;
+    }else if(time_from_heart() > 1){
+        send_heart_beat(header,sock);
+        heart_beat_count_fails++;
+        start_time();
+    }
+}
+
+
 
 #define MAX(x, y) (x > y ? x : y)
 
@@ -72,6 +104,82 @@ int is_closed(int telnetCon, int proxySock, int session_id) {
     send_front();
     return 0;
 }
+
+
+void sproxy(int port) {
+    char buff[1024];
+    char buff2[1024];
+    int MAX_LEN = 1024;
+    int acc, b, l, sock;
+    int telnet = 0;
+    struct sockaddr_in serverAddr, clientAddr;
+    
+
+    char ipText[] = "127.0.0.1";
+    char portText[] = "23";
+    struct sockaddr_in serverAddr2; // address to connect to
+    int sockDeamon; // socket to send to
+    // Create socket 'sock'
+    sockDeamon = socket(PF_INET, SOCK_STREAM, 0);
+
+    if (sockDeamon == -1) {
+        // err
+        perror("client failed creating socket");
+        exit(1);
+    }
+    // Connect socket
+    serverAddr2.sin_family = AF_INET;
+    serverAddr2.sin_port = htons(atoi(portText));
+    inet_pton(AF_INET, ipText, &serverAddr2.sin_addr);
+    if(connect(sockDeamon, (struct sockaddr*)&serverAddr2, sizeof(serverAddr2)) == -1) {
+        perror("client failed connecting socket");
+        exit(1);
+    }else{
+        telnet = 1;
+    }
+
+    while(telnet){
+    int ID = 1234;
+    ////////////////////////////////////////////////
+    sock = socket(PF_INET, SOCK_STREAM, 0);
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
+    serverAddr.sin_port = htons(port);// added local to hold spot 
+    
+    if(sock < 0){
+      fprintf(stderr,"Unable to create socket");
+      exit(1);
+    }
+
+    b = bind(sock,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
+    if(b < 0){
+	fprintf(stderr,"Unable to Bind\n");
+        exit(1);
+    }
+
+    l = listen(sock,5);// pending connections on socket
+    if(l < 0){
+        fprintf(stderr,"Unable to Listen\n");
+        exit(1);
+    }
+
+    //accept the conection
+    socklen_t client_len;
+    client_len  = sizeof(clientAddr);
+    acc = accept(sock,(struct sockaddr *)&clientAddr,&client_len);
+        if(acc < 0){
+           fprintf(stderr,"Unable to accept connection");
+           exit(1);
+        }
+    int cproxy_connection_status;
+    while(!(cproxy_connection_status = is_closed(sockDeamon,acc,ID))){
+        if(cproxy_connection_status == -1){
+            telnet = 0;
+        }
+
+    }
+    close(acc);
+    }
 
 void cproxy(int port, char* ipText , char* portText) {
     struct sockaddr_in sproxyAddr; // address of sproxy
