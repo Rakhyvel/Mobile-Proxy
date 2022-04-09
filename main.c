@@ -143,8 +143,8 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
     int MAX_LEN = 1024;
 
     struct timeval tv;
-    tv.tv_sec = 10;
-    tv.tv_usec = 1000000;
+    tv.tv_sec = 0;
+    tv.tv_usec = 500000;
 
     fd_set readfds;
     FD_SET(telnet_connection, &readfds);
