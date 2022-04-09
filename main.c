@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 #include <errno.h>
 #endif
 
@@ -34,7 +35,7 @@ int time_from_heart() {
     return sec_c - proxytime;
 }
 
-int send_heart_beat(Header header, int sock, int session_id) {
+void send_heart_beat(Header header, int sock, int session_id) {
     send_header(sock, NULL, header); 
 }
 
@@ -49,6 +50,7 @@ int test_heart_beat(Header header, int sock, int session_id) {
         heart_beat_count_fails++;
         start_time();
     }
+    return 0;
 }
 
 // Used to connect to a server as a client
@@ -143,7 +145,9 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             return 1;
         }
         // TODO: reset unack counter
-        test_heart_beat(header,proxySock,session_id);
+        if (test_heart_beat(header,proxySock,session_id)) {
+            return 1;
+        }
     }
     send_front();
     return 0;
@@ -155,10 +159,15 @@ void sproxy(int port) {
     int telnetDeamon_connection = connect_client("127.0.0.1", "23");
 
     int telnet_running = 0;
+    int ID = -1;
     while (telnet_running) {
-        int ID = 1234;
-        ////////////////////////////////////////////////
         int cproxy_connection = connect_server(port);
+        Header header = recv_header(cproxy_connection, NULL);
+        if (header.session_id != ID) {
+            printf("Session has changed!");
+            ID = header.session_id;
+            reset_queue();
+        }
 
         int cproxy_connection_status;
         while (!(cproxy_connection_status = is_closed(telnetDeamon_connection, cproxy_connection, ID))) {
@@ -167,6 +176,7 @@ void sproxy(int port) {
             }
         }
         close(cproxy_connection);
+        reset_await_status();
     }
     close(telnetDeamon_connection);
 }
@@ -204,7 +214,7 @@ int main(int argc, char* argv[]) {
     }
 #else
     if(argc == 2){
-       server(atoi(argv[1]));
+       sproxy(atoi(argv[1]));
     }else{
        fprintf(stderr,"Error missing sport arg");
     }
