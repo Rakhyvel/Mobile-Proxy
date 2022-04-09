@@ -162,6 +162,7 @@ void sproxy(int port) {
         if (header.session_id != ID) {
             printf("Session has changed!");
             ID = header.session_id;
+            reset_queue();
         }
 
         int cproxy_connection_status;
@@ -171,6 +172,7 @@ void sproxy(int port) {
             }
         }
         close(cproxy_connection);
+        reset_await_status();
     }
     close(telnetDeamon_connection);
 }

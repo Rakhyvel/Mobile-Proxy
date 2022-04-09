@@ -62,3 +62,20 @@ void send_front(int sock) {
         queue->awaiting_ack = true;
     }
 }
+
+void reset_await_status() {
+    if (queue != NULL) {
+        queue->awaiting_ack = false;
+    }
+}
+
+static void destroy_queue_node(QueueNode* node) {
+    if (node != NULL) {
+        free(node->data);
+        destroy_queue_node(node->next);
+    }
+}
+
+void reset_queue() {
+    destroy_queue_node(queue);
+}
