@@ -183,7 +183,7 @@ void sproxy(int port) {
 
 void cproxy(int port, char* ipText , char* portText) {
     // Create telnet server socket
-    int telnet_connection = connect_server(22);
+    int telnet_connection = connect_server(port);
 
     bool telnet_running = true;
     while (telnet_running) {
