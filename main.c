@@ -35,7 +35,7 @@ int time_from_heart() {
 }
 
 int send_heart_beat(Header header, int sock, int session_id) {
-    push_msg(ACK, session_id, NULL, 0); 
+    send_header(sock, NULL, header); 
 }
 
 int test_heart_beat(Header header, int sock, int session_id) {
