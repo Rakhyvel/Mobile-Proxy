@@ -152,13 +152,9 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             printf("ack\n");
             pop_front();
             break;
-        /*    
         case HEARTBEAT:
             printf("hb\n");
-            header = (Header){ACK, 0};
-            send_header(proxySock, NULL, header);
             break;
-        */ 
         case END:
             printf("end\n");
             return 1;
@@ -223,7 +219,7 @@ void cproxy(int port, char* ipText , char* portText) {
         int sproxy_connection = connect_client(ipText, portText);
 
         // sproxy send loop
-        push_msg(HEARTBEAT, session_id, NULL, 0);
+        send_header(sproxy_connection, NULL, (Header){HEARTBEAT, 0});
         int sproxy_connection_status;
         while (!(sproxy_connection_status = is_closed(telnet_connection, sproxy_connection, session_id)));
         if (sproxy_connection_status == -1) {
