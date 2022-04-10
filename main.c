@@ -143,7 +143,6 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             printf("data\n");
             send_raw(telnet_connection, buff2, header.length);
             free(buff2);
-            push_msg(ACK, session_id, NULL, 0);
             header = (Header){ACK, 0};
             send_header(proxySock, NULL, header); 
             break;
