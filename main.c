@@ -104,6 +104,7 @@ int accept_server(int sock) {
 
 // returns 0 if good, 1 if sproxy is closed, -1 if telnet is closed
 int is_closed(int telnet_connection, int proxySock, int session_id) {
+    printf("enter is_closed\n");
     char buff[1024];
     int MAX_LEN = 1024;
 
@@ -125,6 +126,7 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
 
     // if input from telnet, send to proxy
     if (FD_ISSET(telnet_connection, &readfds)) {
+        printf("telnet->proxy\n");
         int rev = recv(telnet_connection, buff, MAX_LEN, 0);
         if (rev <= 0) {
             return -1;
@@ -133,25 +135,35 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
     }
     // if input from proxy, send to telnet
     if (FD_ISSET(proxySock, &readfds)) {
+        printf("proxy->telnet\n");
         char* buff2;
         Header header = recv_header(proxySock, &buff2);
         switch(header.type) {
         case DATA:
+            printf("data\n");
             send_raw(telnet_connection, buff2, header.length);
             free(buff2);
             push_msg(ACK, session_id, NULL, 0);
+            header.type = ACK;
+            header.data = NULL;
+            send_header(sock, NULL, header); 
             break;
         case ACK:
+            printf("ack\n");
             pop_front();
             break;
         case HEARTBEAT:
-            push_msg(ACK, session_id, NULL, 0);
+            printf("hb\n");
+            Header header = {ACC, 0};
+            send_header(sock, NULL, header);
             break;
         case END:
+            printf("end\n");
             return 1;
         }
         // TODO: reset unack counter
         if (test_heart_beat(header, proxySock, session_id)) {
+            printf("hb end\n");
             return 1;
         }
     }
@@ -161,6 +173,7 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
 
 
 void sproxy(int port) {
+    printf("sproxy\n");
     // Connect to telnet daemon
     int telnetDeamon_connection = connect_client("127.0.0.1", "23");
     int serverSock = connect_server(port);
@@ -168,10 +181,12 @@ void sproxy(int port) {
     bool telnet_running = true;
     int ID = -1;
     while (telnet_running) {
+        printf("while telnet running\n");
         int cproxy_connection = accept_server(serverSock);
 
         Header header = recv_header(cproxy_connection, NULL);
-        push_msg(ACK, ID, NULL, 0);
+        Header header = {ACC, 0};
+        send_header(sock, NULL, header);
         if (header.session_id != ID) {
             printf("Session has changed!");
             ID = header.session_id;
@@ -179,10 +194,10 @@ void sproxy(int port) {
         }
 
         int cproxy_connection_status;
-        while (!(cproxy_connection_status = is_closed(telnetDeamon_connection, cproxy_connection, ID))) {
-            if (cproxy_connection_status == -1) {
-                telnet_running = 0;
-            }
+        while (!(cproxy_connection_status = is_closed(telnetDeamon_connection, cproxy_connection, ID)));
+        if (cproxy_connection_status == -1) {
+            printf("telnet closed\n");
+            telnet_running = 0;
         }
         close(cproxy_connection);
         reset_await_status();
@@ -192,12 +207,14 @@ void sproxy(int port) {
 }
 
 void cproxy(int port, char* ipText , char* portText) {
+    printf("cproxy\n");
     // Create telnet server socket
     int telnet_sock = connect_server(port);
     int telnet_connection = accept_server(telnet_sock);
 
     bool telnet_running = true;
     while (telnet_running) {
+        printf("while telnet running\n");
         int session_id = 1234;
 
         // Connect to sproxy socket
@@ -208,6 +225,7 @@ void cproxy(int port, char* ipText , char* portText) {
         int sproxy_connection_status;
         while (!(sproxy_connection_status = is_closed(telnet_connection, sproxy_connection, session_id)));
         if (sproxy_connection_status == -1) {
+            printf("telnet closed\n");
             telnet_running = false;
         }
 
