@@ -144,9 +144,8 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             send_raw(telnet_connection, buff2, header.length);
             free(buff2);
             push_msg(ACK, session_id, NULL, 0);
-            header.type = ACK;
-            header.data = NULL;
-            send_header(sock, NULL, header); 
+            header = (Header){ACK, 0};
+            send_header(proxySock, NULL, header); 
             break;
         case ACK:
             printf("ack\n");
@@ -154,8 +153,8 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             break;
         case HEARTBEAT:
             printf("hb\n");
-            Header header = {ACC, 0};
-            send_header(sock, NULL, header);
+            header = (Header){ACK, 0};
+            send_header(proxySock, NULL, header);
             break;
         case END:
             printf("end\n");
@@ -185,8 +184,8 @@ void sproxy(int port) {
         int cproxy_connection = accept_server(serverSock);
 
         Header header = recv_header(cproxy_connection, NULL);
-        Header header = {ACC, 0};
-        send_header(sock, NULL, header);
+        header = (Header){ACK, 0};
+        send_header(cproxy_connection, NULL, header);
         if (header.session_id != ID) {
             printf("Session has changed!");
             ID = header.session_id;
