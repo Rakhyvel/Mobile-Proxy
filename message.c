@@ -36,7 +36,7 @@ Sends data through a socket. Should only be called by queue! Use push_msg if you
 */
 void send_header(int sock, char* data, Header header) {
     // Send header
-    send_raw(sock, (char*)(&data), sizeof(header));
+    send_raw(sock, (char*)(&header), sizeof(header));
 
     // Send data
     if (header.type == DATA) {
