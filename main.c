@@ -39,17 +39,24 @@ void send_heart_beat(Header header, int sock, int session_id) {
     send_header(sock, NULL, header); 
 }
 
-int test_heart_beat(Header header, int sock, int session_id) {
+int test_heart_beat(int sock, int session_id) {
+    Header header;
+    header.type = HEARTBEAT;
+    header.session_id = session_id;
+    header.length = 0;
+    header.msg_num = 0;
+/*
     if (heart_beat_count_fails > 3) {
+        heart_beat_count_fails = 0;
         return 1;
     }
-    if (header.type == DATA || header.type == HEARTBEAT) {
+*/
+    if (header.type == DATA || header.type == HEARTBEAT || header.type == ACK) {
         heart_beat_count_fails = 0;
-    } else if (time_from_heart() > 1) {
-        send_heart_beat(header,sock,session_id);
-        heart_beat_count_fails++;
         start_time();
-    } else if(time_from_heart() > 3){
+    }
+    send_heart_beat(header,sock,session_id); 
+    if(time_from_heart() > 3){
         return 1;
     }
     return 0;
@@ -160,7 +167,7 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             return 1;
         }
         // TODO: reset unack counter
-        if (test_heart_beat(header, proxySock, session_id)) {
+        if (test_heart_beat(proxySock, session_id)) {
             printf("hb end\n");
             return 1;
         }
