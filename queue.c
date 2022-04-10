@@ -17,6 +17,7 @@ static int num_msgs = 0;
 
 // Pushes a message to be sent onto the back of the queue
 void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
+    printf("push msg type:%d length:%d\n", type, num_bytes);
     // create node
     QueueNode* node = calloc(sizeof(QueueNode), 1);
     node->header.type = type;
@@ -30,10 +31,13 @@ void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
 
     // Place at end of queue
     if (queue == NULL) {
+        printf("push directly onto queue\n");
         queue = node;
     } else {
         QueueNode* curr = queue;
+        printf("next\n");
         while (curr->next != NULL) {
+            printf("next\n");
             curr = curr->next;
         }
         curr->next = node;
@@ -42,6 +46,7 @@ void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
 
 // Pops the front of the queue. NO CHECKS IF THIS IS GOOD OR NOT! MAYBE BUG!!
 void pop_front() {
+    printf("pop front\n");
     // pop front of queue
     QueueNode* node = queue;
     queue = node->next;
@@ -50,20 +55,19 @@ void pop_front() {
 
 // Sends the message at the front of the queue if it has not been sent already
 void send_front(int sock) {
+    printf("send front\n");
     // if the front message is not awaiting ack, send, mark awaiting_ack
     if (!queue->awaiting_ack) {
+        printf("ACTUALLY send front\n");
         // Send header
         send_raw(sock, (char*)(&queue->header), sizeof(queue->header));
 
         // Send data
         if (queue->header.type == DATA) {
+            printf("send data\n");
             send_raw(sock, queue->data, queue->header.length);
         }
-        if (queue->header.type == ACK) {
-            pop_front();
-        } else {
-            queue->awaiting_ack = true;
-        }
+        queue->awaiting_ack = true;
     }
 }
 
