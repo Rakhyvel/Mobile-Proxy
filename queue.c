@@ -57,7 +57,7 @@ void pop_front() {
 void send_front(int sock) {
     printf("send front\n");
     // if the front message is not awaiting ack, send, mark awaiting_ack
-    if (!queue->awaiting_ack) {
+    if (queue && !queue->awaiting_ack) {
         printf("ACTUALLY send front\n");
         // Send header
         send_raw(sock, (char*)(&queue->header), sizeof(queue->header));
