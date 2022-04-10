@@ -41,7 +41,7 @@ void send_heart_beat(Header header, int sock, int session_id) {
 
 int test_heart_beat(Header header, int sock, int session_id) {
     if (heart_beat_count_fails > 3) {
-        return -1;
+        return 1;
     }
     if (header.type == DATA || header.type == HEARTBEAT) {
         heart_beat_count_fails = 0;
@@ -49,6 +49,8 @@ int test_heart_beat(Header header, int sock, int session_id) {
         send_heart_beat(header,sock,session_id);
         heart_beat_count_fails++;
         start_time();
+    } else if(time_from_heart() > 3){
+        return 1;
     }
     return 0;
 }
@@ -150,11 +152,13 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             printf("ack\n");
             pop_front();
             break;
+        /*    
         case HEARTBEAT:
             printf("hb\n");
             header = (Header){ACK, 0};
             send_header(proxySock, NULL, header);
             break;
+        */ 
         case END:
             printf("end\n");
             return 1;
