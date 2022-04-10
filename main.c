@@ -145,11 +145,11 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             return 1;
         }
         // TODO: reset unack counter
-        if (test_heart_beat(header,proxySock,session_id)) {
+        if (test_heart_beat(header, proxySock, session_id)) {
             return 1;
         }
     }
-    send_front();
+    send_front(proxySock);
     return 0;
 }
 
