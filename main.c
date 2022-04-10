@@ -89,7 +89,7 @@ int connect_server(short port) {
     return sock;
 }
 
-void accept_server(int sock) {
+int accept_server(int sock) {
     struct sockaddr_in addr;
     socklen_t addrLen  = sizeof(addr);
 
