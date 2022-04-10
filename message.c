@@ -90,11 +90,13 @@ Header recv_header(int sock, char** data) {
     if (recv_raw(sock, (char*)(&header), sizeof(header)) == -1) {
         // Message is actually a termination
         header.type = END;
+        printf("bad header\n");
     } else if (header.type == DATA){
         // Receive data
         *data = calloc(header.length, sizeof(char));
         if (recv_raw(sock, *data, header.length) == -1) {
             // Bad read on data, assume termination
+            printf("bad data\n");
             header.type = END;
             free(*data);
         }
