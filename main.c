@@ -152,13 +152,9 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             printf("ack\n");
             pop_front();
             break;
-        /*    
         case HEARTBEAT:
             printf("hb\n");
-            header = (Header){ACK, 0};
-            send_header(proxySock, NULL, header);
             break;
-        */ 
         case END:
             printf("end\n");
             return 1;
