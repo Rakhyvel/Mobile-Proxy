@@ -171,6 +171,7 @@ void sproxy(int port) {
         int cproxy_connection = accept_server(serverSock);
 
         Header header = recv_header(cproxy_connection, NULL);
+        push_msg(ACK, session_id, NULL, 0);
         if (header.session_id != ID) {
             printf("Session has changed!");
             ID = header.session_id;

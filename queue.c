@@ -59,7 +59,11 @@ void send_front(int sock) {
         if (queue->header.type == DATA) {
             send_raw(sock, queue->data, queue->header.length);
         }
-        queue->awaiting_ack = true;
+        if (queue->header.type == ACK) {
+            pop_front();
+        } else {
+            queue->awaiting_ack = true;
+        }
     }
 }
 
