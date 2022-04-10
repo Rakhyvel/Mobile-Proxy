@@ -72,7 +72,7 @@ int recv_raw(int sock, char* data, int num_bytes) {
             num_bytes -= bytes_recv;
         }
     } while(num_bytes > 0);
-    return -1;
+    return total_bytes;
 }
 
 /*
@@ -93,7 +93,7 @@ Header recv_header(int sock, char** data) {
     } else if (header.type == DATA){
         // Receive data
         *data = calloc(header.length, sizeof(char));
-        if(recv_raw(sock, *data, header.length) == -1) {
+        if (recv_raw(sock, *data, header.length) == -1) {
             // Bad read on data, assume termination
             header.type = END;
             free(*data);

@@ -73,25 +73,31 @@ int connect_client(char* ipText, char* portText) {
 
 // Used to accept a connection from a client as a server
 int connect_server(short port) {
-    struct sockaddr_in thisAddr, addr;
+    struct sockaddr_in thisAddr;
     int sock = socket(PF_INET, SOCK_STREAM, 0);
     thisAddr.sin_family = AF_INET;
     thisAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
     thisAddr.sin_port = htons(port); // added local to hold spot 
     if (sock < 0) {
-        fprintf(stderr,"Unable to create socket");
+        fprintf(stderr, "Unable to create socket");
         exit(1);
     }
     if (bind(sock, (struct sockaddr*)&thisAddr, sizeof(thisAddr)) < 0) {
-        fprintf(stderr,"Unable to Bind");
+        fprintf(stderr, "Unable to Bind");
         exit(1);
     }
-    if (listen(sock, 5) < 0) {
-        fprintf(stderr,"Unable to Listen");
-        exit(1);
-    }
-    // Accept new telnet connection
+    return sock;
+}
+
+void accept_server(int sock) {
+    struct sockaddr_in addr;
     socklen_t addrLen  = sizeof(addr);
+
+    if (listen(sock, 5) < 0) {
+        fprintf(stderr, "Unable to Listen");
+        exit(1);
+    }
+    
     int serverCon = accept(sock, (struct sockaddr*)&addr, &addrLen); // blocks!
     return serverCon;
 }
@@ -157,11 +163,13 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
 void sproxy(int port) {
     // Connect to telnet daemon
     int telnetDeamon_connection = connect_client("127.0.0.1", "23");
+    int serverSock = connect_server(port);
 
     bool telnet_running = true;
     int ID = -1;
     while (telnet_running) {
-        int cproxy_connection = connect_server(port);
+        int cproxy_connection = accept_server(serverSock);
+
         Header header = recv_header(cproxy_connection, NULL);
         if (header.session_id != ID) {
             printf("Session has changed!");
@@ -179,11 +187,13 @@ void sproxy(int port) {
         reset_await_status();
     }
     close(telnetDeamon_connection);
+    close(serverSock);
 }
 
 void cproxy(int port, char* ipText , char* portText) {
     // Create telnet server socket
-    int telnet_connection = connect_server(port);
+    int telnet_sock = connect_server(port);
+    int telnet_connection = accept_server(port);
 
     bool telnet_running = true;
     while (telnet_running) {
@@ -202,6 +212,7 @@ void cproxy(int port, char* ipText , char* portText) {
 
         close(sproxy_connection);
     }
+    close(telnet_sock);
     close(telnet_connection);
 }
 
