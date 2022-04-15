@@ -94,12 +94,14 @@ Header recv_header(int sock, char** data) {
         printf("bad header\n");
     } else if (header.type == DATA){
         // Receive data
-        *data = calloc(header.length, sizeof(char));
+        *data = calloc(header.length, sizeof(char) + 1);
         if (header.length != 0 && recv_raw(sock, *data, header.length) == -1) {
             // Bad read on data, assume termination
             printf("bad data %d\n", header.length);
             header.type = END;
             free(*data);
+        } else {
+            printf("Data: %s\n", data);
         }
     }
 
