@@ -101,7 +101,7 @@ Header recv_header(int sock, char** data) {
             header.type = END;
             free(*data);
         } else {
-            printf("Data: %s\n", data);
+            printf("Data: %s\n", *data);
         }
     }
 
