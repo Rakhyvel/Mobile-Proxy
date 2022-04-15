@@ -59,6 +59,7 @@ int recv_raw(int sock, char* data, int num_bytes) {
 
     do {
         bytes_recv = recv(sock, data, num_bytes, 0);
+        printf("%d\n",bytes_recv);
         if (bytes_recv <= 0) {
             if (wellRecv) {
                 return total_bytes;
