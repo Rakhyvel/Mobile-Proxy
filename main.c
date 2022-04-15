@@ -255,6 +255,8 @@ void cproxy(int port, char* ipText , char* portText) {
         // sproxy send loop
         send_header(sproxy_connection, NULL, (Header){HEARTBEAT, 0});
         int sproxy_connection_status;
+        start_heart_one_sec();//rerest one sec timer
+        start_time();//reset time out
         while (!(sproxy_connection_status = is_closed(telnet_connection, sproxy_connection, session_id)));
         if (sproxy_connection_status == -1) {
             printf("telnet closed\n");
