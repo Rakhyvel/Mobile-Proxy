@@ -68,7 +68,6 @@ int test_heart_beat(int sock, int session_id) {
         return 1;
     }
 */
-
     printf("time gl hb t1 = %d t2 = %d\n",(int)proxytime,(int)one_sec);
     if(time_from_last() > 1){//sends heart every 
         printf("time from hb%d\n",time_from_last());
@@ -212,6 +211,7 @@ void sproxy(int port) {
 
     bool telnet_running = true;
     int ID = -1;
+    
     while (telnet_running) {
         printf("while telnet running\n");
         int cproxy_connection = accept_server(serverSock);
@@ -224,6 +224,8 @@ void sproxy(int port) {
         }
 
         int cproxy_connection_status;
+        start_heart_one_sec();//rerest one sec timer
+        start_time();//reset time out
         while (!(cproxy_connection_status = is_closed(telnetDeamon_connection, cproxy_connection, ID)));
         if (cproxy_connection_status == -1) {
             printf("telnet closed\n");
