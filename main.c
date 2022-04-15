@@ -220,6 +220,8 @@ void sproxy(int port) {
         if (header.session_id != ID) {
             printf("Session has changed!");
             ID = header.session_id;
+            close(telnetDeamon_connection);
+            telnetDeamon_connection = connect_client("127.0.0.1", "23");
             reset_queue();
         }
 
@@ -243,12 +245,10 @@ void cproxy(int port, char* ipText , char* portText) {
     // Create telnet server socket
     int telnet_sock = connect_server(port);
     int telnet_connection = accept_server(telnet_sock);
-
+    int session_id = rand();
     bool telnet_running = true;
     while (telnet_running) {
         printf("while telnet running\n");
-        int session_id = 1234;
-
         // Connect to sproxy socket
         int sproxy_connection = connect_client(ipText, portText);
 
