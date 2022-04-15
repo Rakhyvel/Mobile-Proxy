@@ -41,7 +41,8 @@ void send_header(int sock, char* data, Header header) {
     // Send data
     if (header.type == DATA) {
         send_raw(sock, data, header.length);
-        for(int i = 0; i < header.length; i++) {
+        int i;
+        for(i = 0; i < header.length; i++) {
             printf("%d\t%d\t'%c'", i, data[i], data[i]);
         }
     }
