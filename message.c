@@ -100,8 +100,6 @@ Header recv_header(int sock, char** data) {
             printf("bad data %d\n", header.length);
             header.type = END;
             free(*data);
-        } else {
-            printf("Data: %s\n", *data);
         }
     }
 

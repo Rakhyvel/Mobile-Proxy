@@ -157,7 +157,7 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
     if (FD_ISSET(telnet_connection, &readfds)) {
         printf("telnet->proxy\n");
         memset(buff, 0, MAX_LEN);
-        int rev = recv(telnet_connection, buff, MAX_LEN, 0);
+        int rev = recv_raw(telnet_connection, buff, MAX_LEN);
         printf("recv from buff: %s", buff);
         if (rev <= 0) {
             return -1;
