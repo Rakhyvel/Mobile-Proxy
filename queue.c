@@ -24,8 +24,8 @@ void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
     node->header.length = num_bytes;
     node->header.session_id = session_id;
     node->header.msg_num = ++num_msgs;
-    node->data = malloc(num_bytes);
-    strncpy(node->data, data, num_bytes);
+    node->data = calloc(num_bytes, sizeof(char));
+    memcpy(node->data, data, num_bytes);
     node->awaiting_ack = false;
     node->next = NULL;
 

@@ -220,7 +220,6 @@ void sproxy(int port) {
         printf("while telnet running\n");
         int cproxy_connection = accept_server(serverSock);
 
-        /*
         Header header = recv_header(cproxy_connection, NULL);
         if (header.session_id != ID) {
             printf("Session has changed!");
@@ -230,7 +229,6 @@ void sproxy(int port) {
 
         start_heart_one_sec();//rerest one sec timer
         start_time();//reset time out
-        */
         int cproxy_connection_status;
         while (!(cproxy_connection_status = is_closed(telnetDeamon_connection, cproxy_connection, ID)));
         if (cproxy_connection_status == -1) {
@@ -259,11 +257,9 @@ void cproxy(int port, char* ipText , char* portText) {
         int sproxy_connection = connect_client(ipText, portText);
 
         // sproxy send loop
-        /*
         send_header(sproxy_connection, NULL, (Header){HEARTBEAT, 0});
         start_heart_one_sec();//rerest one sec timer
         start_time();//reset time out
-        */
         int sproxy_connection_status;
         while (!(sproxy_connection_status = is_closed(telnet_connection, sproxy_connection, session_id)));
         if (sproxy_connection_status == -1) {
