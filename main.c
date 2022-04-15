@@ -192,15 +192,11 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
             printf("end\n");
             return 1;
         }
-
-        }     
-        /*
-        if (test_heart_beat(proxySock, session_id)) {
-            printf("hb end\n");
-            return 1;
-        }
-        */
-
+    }
+    if (test_heart_beat(proxySock, session_id)) {
+        printf("hb end\n");
+        return 1;
+    }
     
     send_front(proxySock);
     return 0;
