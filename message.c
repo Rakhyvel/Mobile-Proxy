@@ -43,7 +43,7 @@ void send_header(int sock, char* data, Header header) {
         send_raw(sock, data, header.length);
         int i;
         for(i = 0; i < header.length; i++) {
-            printf("%d\t%d\t'%c'", i, data[i], data[i]);
+            printf("%d\t%d\t'%c'\n", i, data[i], data[i]);
         }
     }
 }
