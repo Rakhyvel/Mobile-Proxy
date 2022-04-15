@@ -62,14 +62,7 @@ void send_front(int sock) {
     // if the front message is not awaiting ack, send, mark awaiting_ack
     if (queue && !queue->awaiting_ack) {
         printf("ACTUALLY send front\n");
-        // Send header
-        send_raw(sock, (char*)(&queue->header), sizeof(queue->header));
-
-        // Send data
-        if (queue->header.type == DATA) {
-            printf("send data\n");
-            send_raw(sock, queue->data, queue->header.length);
-        }
+        send_header(sock, queue->data, queue->header);
         queue->awaiting_ack = true;
     }
 }
