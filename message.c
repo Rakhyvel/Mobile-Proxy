@@ -1,9 +1,28 @@
+/*
+Messages between proxies are assumed to begin with a header that contains info
+about the message, like the type, the length of the payload, and the session ID
+of the sender.
+
+Messages through proxy-telnet connections do not have headers, and are instead
+sent as plain data using the C socket API.
+
+Only 'DATA' typed messages are forwarded to telnet by proxies. 'HEARTBEAT' and
+'ACK' messages contain no data, but do contain the session ID of the sender.
+
+An 'ACK' message signifies to the other proxy that the latest 'DATA' message 
+was received.
+
+If anything goes wrong while receiving a message, or if the message is 
+malformed, or if the other proxy disconnets, the 'END' message type is assumed.
+On receiving an 'END' message, a proxy should disconnect the connection.
+*/
+
 #include "message.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/socket.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
 
 /*
 Sends data through a socket WITHOUT header

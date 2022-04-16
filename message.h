@@ -7,9 +7,8 @@ cast address to a character array to send through socket
 */
 typedef struct {
     char type;
-    int length;
+    int length; // Length of the payload
     int session_id;
-    int msg_num;
 } Header;
 
 typedef enum {
