@@ -15,6 +15,10 @@ was received.
 If anything goes wrong while receiving a message, or if the message is 
 malformed, or if the other proxy disconnets, the 'END' message type is assumed.
 On receiving an 'END' message, a proxy should disconnect the connection.
+
+-- Authors --
+Joseph Shimel
+Austin James Connick
 */
 
 #include "message.h"
@@ -109,13 +113,11 @@ Header recv_header(int sock, char** data) {
     if (recv_raw(sock, (char*)(&header), sizeof(header)) == -1) {
         // Message is actually a termination
         header.type = END;
-        printf("bad header\n");
     } else if (header.type == DATA){
         // Receive data
         *data = calloc(header.length, sizeof(char) + 1);
         if (header.length != 0 && recv_raw(sock, *data, header.length) == -1) {
             // Bad read on data, assume termination
-            printf("bad data %d\n", header.length);
             header.type = END;
             free(*data);
         }

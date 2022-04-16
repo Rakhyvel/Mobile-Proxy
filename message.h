@@ -1,3 +1,9 @@
+/*
+-- Authors --
+Joseph Shimel
+Austin James Connick
+*/
+
 #ifndef MESSAGE_H
 #define MESSAGE_H
 

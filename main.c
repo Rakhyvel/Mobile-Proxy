@@ -103,11 +103,11 @@ int connect_server(short port) {
     thisAddr.sin_addr.s_addr = INADDR_ANY; // htonl INADDR_ANY ;
     thisAddr.sin_port = htons(port); // added local to hold spot 
     if (sock < 0) {
-        fprintf(stderr, "connect_server(): unable to create socket");
+        fprintf(stderr, "connect_server(): unable to create socket\n");
         exit(1);
     }
     if (bind(sock, (struct sockaddr*)&thisAddr, sizeof(thisAddr)) < 0) {
-        fprintf(stderr, "connect_server(): unable to bind");
+        fprintf(stderr, "connect_server(): unable to bind\n");
         exit(1);
     }
     return sock;
@@ -124,7 +124,7 @@ int accept_server(int sock) {
     socklen_t addrLen  = sizeof(addr);
 
     if (listen(sock, 5) < 0) {
-        fprintf(stderr, "accept_server(): unable to listen");
+        fprintf(stderr, "accept_server(): unable to listen\n");
         exit(1);
     }
     
@@ -157,7 +157,7 @@ int is_closed(int telnet_connection, int proxySock, int session_id) {
 
     int n = (telnet_connection > proxySock ? telnet_connection : proxySock) + 1;
     if (select(n, &readfds, NULL, NULL, &tv) < 0){
-        fprintf(stderr, "Error in select");
+        fprintf(stderr, "Error in select\n");
         exit(1);
     }
 
@@ -301,13 +301,13 @@ int main(int argc, char* argv[]) {
     if (argc == 4) {
         cproxy(atoi(argv[1]),argv[2],argv[3]);
     } else {
-        fprintf(stderr, "usage: cproxy <telnet port> <server ip> <server port>");
+        fprintf(stderr, "usage: cproxy <telnet port> <server ip> <server port>\n");
     }
 #else
     if(argc == 2){
        sproxy(atoi(argv[1]));
     }else{
-       fprintf(stderr,"usage: sproxy <server port>");
+       fprintf(stderr,"usage: sproxy <server port>\n");
     }
 #endif
     return 0;

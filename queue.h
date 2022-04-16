@@ -1,3 +1,9 @@
+/*
+-- Authors --
+Joseph Shimel
+Austin James Connick
+*/
+
 #ifndef QUEUE_H
 #define QUEUE_H
 

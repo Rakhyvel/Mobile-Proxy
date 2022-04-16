@@ -2,6 +2,10 @@
 The message queue stores messages that have been sent or are waiting to be
 sent. Messages are popped off the queue when they are acknowledged by the other
 proxy.
+
+-- Authors --
+Joseph Shimel
+Austin James Connick
 */
 
 #include "queue.h"
