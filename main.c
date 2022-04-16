@@ -253,7 +253,7 @@ void cproxy(int port, char* ipText , char* portText) {
         int sproxy_connection = connect_client(ipText, portText);
 
         // sproxy send loop
-        send_header(sproxy_connection, NULL, (Header){HEARTBEAT, 0});
+        send_header(sproxy_connection, NULL, (Header){HEARTBEAT, 0, session_id});
         start_heart_one_sec();//rerest one sec timer
         start_time();//reset time out
         int sproxy_connection_status;
