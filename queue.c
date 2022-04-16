@@ -1,3 +1,13 @@
+/*
+The message queue stores messages that have been sent or are waiting to be
+sent. Messages are popped off the queue when they are acknowledged by the other
+proxy.
+
+-- Authors --
+Joseph Shimel
+Austin James Connick
+*/
+
 #include "queue.h"
 
 #include <stdbool.h>
@@ -13,16 +23,21 @@ typedef struct queueNode {
 } QueueNode;
 
 static QueueNode* queue = NULL;
-static int num_msgs = 0;
 
-// Pushes a message to be sent onto the back of the queue
+/*
+Pushes a message to be sent onto the back of the queue
+
+@param type Type of the message to send
+@param session_id Session ID of the sender
+@param data Pointer to data of the message. Will be copied
+@param num_bytes The number of bytes in the message's data
+*/
 void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
     // create node
     QueueNode* node = calloc(sizeof(QueueNode), 1);
     node->header.type = type;
     node->header.length = num_bytes;
     node->header.session_id = session_id;
-    node->header.msg_num = ++num_msgs;
     node->data = calloc(num_bytes, sizeof(char));
     memcpy(node->data, data, num_bytes);
     node->awaiting_ack = false;
@@ -40,7 +55,10 @@ void push_msg(MessageType type, int session_id, char* data, int num_bytes) {
     }
 }
 
-// Pops the front of the queue. NO CHECKS IF THIS IS GOOD OR NOT! MAYBE BUG!!
+/*
+Pops the front of the queue. OK to pop an empty queue, though that shouldn't 
+happen in normal usage.
+*/
 void pop_front() {
     // pop front of queue
     QueueNode* node = queue;
@@ -51,7 +69,11 @@ void pop_front() {
     free(node->data);
 }
 
-// Sends the message at the front of the queue if it has not been sent already
+/*
+Sends the message at the front of the queue if it has not been sent already
+
+@param sock Socket of the other proxy to send the message to
+*/
 void send_front(int sock) {
     // if the front message is not awaiting ack, send, mark awaiting_ack
     if (queue && !queue->awaiting_ack) {
@@ -60,6 +82,9 @@ void send_front(int sock) {
     }
 }
 
+/*
+Resets the first message of the queue so that it isnt awaiting an ack
+*/
 void reset_await_status() {
     if (queue != NULL) {
         queue->awaiting_ack = false;
@@ -73,6 +98,9 @@ static void destroy_queue_node(QueueNode* node) {
     }
 }
 
+/*
+Destroys the queue
+*/
 void reset_queue() {
     destroy_queue_node(queue);
     queue = NULL;
